@@ -6,20 +6,13 @@
   <title>Turkey Redistricter</title>
 
   <!-- Leaflet -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    crossorigin=""
-  />
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    crossorigin=""
-  ></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
   <style>
     :root{
       --bg: #f6f8fc;
-      --panel: #ffffff;
+      --panel: rgba(255,255,255,.94);
       --text: #0f172a;
       --muted: #475569;
       --muted2:#64748b;
@@ -47,12 +40,11 @@
       overflow:hidden;
     }
 
-    /* CRITICAL FIX: grid row must be 1fr so children get height */
     .app{
       height:100vh;
       display:grid;
-      grid-template-columns: 1fr 380px;
-      grid-template-rows: 1fr;       /* <-- FIX */
+      grid-template-columns: 1fr 400px;
+      grid-template-rows: 1fr;     /* critical: give grid children real height */
       gap: 16px;
       padding: 16px;
       min-height: 0;
@@ -63,24 +55,18 @@
       border-radius: var(--radius);
       overflow:hidden;
       box-shadow: var(--shadow);
-      background: #fff;
-      border:1px solid rgba(226,232,240,.75);
-      height:100%;                   /* <-- FIX */
-      min-height:0;                  /* <-- FIX */
+      background:#fff;
+      border:1px solid rgba(226,232,240,.80);
+      min-height:0;
     }
-
-    /* CRITICAL FIX: make map fill the wrap regardless of content sizing */
     #map{
-      position:absolute;             /* <-- FIX */
-      inset:0;                       /* <-- FIX */
+      position:absolute; inset:0;  /* critical: map fills container */
     }
 
     .topbar{
       position:absolute;
-      z-index: 800;
-      top: 14px;
-      left: 14px;
-      right: 14px;
+      z-index: 900;
+      top: 14px; left: 14px; right: 14px;
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -90,21 +76,22 @@
       background: rgba(255,255,255,.92);
       border: 1px solid rgba(226,232,240,.9);
       box-shadow: var(--shadow2);
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(10px);
     }
+
     .brand{
       display:flex;
       align-items:center;
       gap:10px;
-      min-width: 220px;
+      min-width: 240px;
     }
     .dot{
       width:10px; height:10px; border-radius:999px;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
-      box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.14);
     }
     .brand .title{
-      font-weight: 900;
+      font-weight: 950;
       letter-spacing:-0.02em;
       line-height:1.05;
     }
@@ -113,6 +100,7 @@
       color: var(--muted2);
       margin-top:2px;
     }
+
     .controls{
       display:flex;
       align-items:center;
@@ -127,18 +115,18 @@
       padding: 6px 10px;
       border-radius: 999px;
       border:1px solid rgba(226,232,240,.95);
-      background: rgba(248,250,252,.9);
+      background: rgba(248,250,252,.90);
     }
     .control label{
       font-size:12px;
       color: var(--muted);
-      font-weight: 700;
+      font-weight: 800;
     }
     select{
       appearance:none;
       border:0;
       background: transparent;
-      font-weight:900;
+      font-weight:950;
       color: var(--text);
       padding: 4px 28px 4px 10px;
       border-radius: 999px;
@@ -153,10 +141,11 @@
       background-size: 5px 5px, 5px 5px;
       background-repeat:no-repeat;
     }
+
     .btn{
       border:none;
       cursor:pointer;
-      font-weight:900;
+      font-weight:950;
       padding: 10px 14px;
       border-radius: 999px;
       background: var(--text);
@@ -171,13 +160,13 @@
     .hint{
       font-size: 12px;
       color: var(--muted2);
-      font-weight: 700;
+      font-weight: 800;
       padding: 6px 10px;
       border-radius: 999px;
-      background: rgba(241,245,249,.85);
-      border:1px solid rgba(226,232,240,.85);
+      background: rgba(241,245,249,.88);
+      border:1px solid rgba(226,232,240,.88);
       white-space:nowrap;
-      max-width: 480px;
+      max-width: 520px;
       overflow:hidden;
       text-overflow: ellipsis;
     }
@@ -187,11 +176,10 @@
       display:flex;
       flex-direction:column;
       gap: 14px;
-      min-width: 320px;
-      min-height: 0;
+      min-height:0;
     }
     .card{
-      background: rgba(255,255,255,.92);
+      background: var(--panel);
       border: 1px solid rgba(226,232,240,.9);
       border-radius: var(--radius);
       box-shadow: var(--shadow2);
@@ -202,8 +190,9 @@
       margin:0 0 10px 0;
       font-size: 14px;
       letter-spacing: -0.01em;
+      font-weight: 950;
     }
-    .muted{ color: var(--muted2); font-size: 12px; line-height:1.35; }
+    .muted{ color: var(--muted2); font-size: 12px; line-height:1.35; font-weight:800; }
 
     .legendbar{
       height: 10px;
@@ -217,7 +206,7 @@
       gap:10px;
       font-size:12px;
       color: var(--muted);
-      font-weight:800;
+      font-weight:900;
     }
 
     .district-header{
@@ -228,16 +217,16 @@
     }
     .district-name{
       font-size: 16px;
-      font-weight: 950;
+      font-weight: 1000;
       letter-spacing: -0.02em;
       line-height:1.1;
       margin:0;
     }
     .district-sub{
-      margin-top: 3px;
+      margin-top: 4px;
       font-size:12px;
       color: var(--muted);
-      font-weight:800;
+      font-weight:900;
       display:flex;
       gap:8px;
       flex-wrap:wrap;
@@ -249,22 +238,22 @@
       gap:6px;
       padding: 4px 10px;
       background: var(--chip);
-      border: 1px solid rgba(99,102,241,.18);
+      border: 1px solid rgba(99,102,241,.20);
       color: #3730a3;
       border-radius: 999px;
       font-size: 12px;
-      font-weight: 900;
+      font-weight: 950;
     }
     .chip .sw{ width:10px; height:10px; border-radius: 3px; background:#94a3b8; }
 
     .clear-btn{
       border:none;
       cursor:pointer;
-      font-weight:950;
+      font-weight:1000;
       padding: 8px 10px;
       border-radius: 999px;
-      background: rgba(241,245,249,.95);
-      border: 1px solid rgba(226,232,240,.95);
+      background: rgba(241,245,249,.96);
+      border: 1px solid rgba(226,232,240,.96);
       color: var(--text);
     }
 
@@ -277,27 +266,27 @@
     .metric{
       padding: 10px 10px;
       border-radius: var(--radius2);
-      background: rgba(248,250,252,.92);
-      border: 1px solid rgba(226,232,240,.92);
+      background: rgba(248,250,252,.94);
+      border: 1px solid rgba(226,232,240,.94);
     }
     .metric .k{
       font-size: 11px;
       color: var(--muted2);
-      font-weight: 900;
+      font-weight: 950;
       letter-spacing: .02em;
       text-transform: uppercase;
     }
     .metric .v{
       margin-top: 5px;
       font-size: 14px;
-      font-weight: 950;
+      font-weight: 1000;
       letter-spacing: -0.01em;
     }
     .metric .s{
       margin-top: 2px;
       font-size: 12px;
       color: var(--muted);
-      font-weight: 800;
+      font-weight: 850;
     }
 
     .section-title{
@@ -307,18 +296,18 @@
       gap:10px;
       margin-top: 10px;
       padding-top: 12px;
-      border-top: 1px solid rgba(226,232,240,.95);
+      border-top: 1px solid rgba(226,232,240,.96);
     }
     .section-title h4{
       margin:0;
       font-size: 13px;
-      font-weight: 950;
+      font-weight: 1000;
       letter-spacing: -0.01em;
     }
     .section-title .small{
       font-size: 12px;
       color: var(--muted2);
-      font-weight: 800;
+      font-weight: 900;
       white-space:nowrap;
     }
 
@@ -338,7 +327,7 @@
       display:flex;
       align-items:center;
       gap:8px;
-      font-weight: 950;
+      font-weight: 1000;
       font-size: 12px;
       overflow:hidden;
       text-overflow: ellipsis;
@@ -352,7 +341,7 @@
     .track{
       height: 10px;
       border-radius: 999px;
-      background: rgba(226,232,240,.9);
+      background: rgba(226,232,240,.92);
       border: 1px solid rgba(148,163,184,.18);
       overflow:hidden;
     }
@@ -367,7 +356,7 @@
       text-align:right;
       font-size: 12px;
       color: var(--muted);
-      font-weight: 900;
+      font-weight: 950;
       white-space:nowrap;
     }
 
@@ -375,21 +364,21 @@
       border-radius: 14px !important;
       overflow:hidden;
       box-shadow: var(--shadow2);
-      border: 1px solid rgba(226,232,240,.95);
+      border: 1px solid rgba(226,232,240,.96);
     }
     .leaflet-bar a{
-      background: rgba(255,255,255,.95) !important;
+      background: rgba(255,255,255,.96) !important;
       color: var(--text) !important;
     }
 
     .district-tooltip{
-      background: rgba(255,255,255,.95);
-      border: 1px solid rgba(226,232,240,.95);
+      background: rgba(255,255,255,.96);
+      border: 1px solid rgba(226,232,240,.96);
       color: var(--text);
       border-radius: 12px;
       box-shadow: var(--shadow2);
       padding: 8px 10px;
-      font-weight: 950;
+      font-weight: 1000;
       letter-spacing: -0.01em;
     }
     .district-tooltip .t2{
@@ -397,7 +386,7 @@
       margin-top:2px;
       font-size: 12px;
       color: var(--muted);
-      font-weight: 800;
+      font-weight: 900;
     }
   </style>
 </head>
@@ -428,7 +417,7 @@
             </select>
           </div>
           <button class="btn" id="fitBtn" title="Fit Turkey">Fit</button>
-          <div class="hint" id="hintText" title="Tip">
+          <div class="hint" id="hintText" title="Info">
             Hover to preview. Click to pin/unpin. (Turnout & age use 2024 pop + 2024 registered.)
           </div>
         </div>
@@ -438,14 +427,14 @@
     </div>
 
     <div class="panel">
-      <div class="card" id="legendCard">
+      <div class="card">
         <h3>Legend</h3>
         <div class="muted" id="legendDesc">Population total (light green → dark green).</div>
         <div class="legendbar" id="legendBar"></div>
         <div class="legendlabels"><span id="legMin">—</span><span id="legMax">—</span></div>
       </div>
 
-      <div class="card" id="districtCard">
+      <div class="card">
         <div class="district-header">
           <div>
             <p class="district-name" id="dName">District</p>
@@ -458,7 +447,7 @@
 
         <div class="section-title">
           <h4>Election (winner)</h4>
-          <div class="small" id="eSmall">Winner shading = lighter when margin is small</div>
+          <div class="small">Winner shading = lighter when margin is small</div>
         </div>
 
         <div class="muted" id="eNote" style="margin-top:6px;">Hover or click a district to see details.</div>
@@ -468,11 +457,11 @@
   </div>
 
 <script>
-/* ------------------------------- Files ---------------------------------- */
-const FILE_GEOJSON = "./turkey-admin-level-6.geojson";
-const FILE_POP_CSV = "./province_district_2014_2019_2024.csv";
+/* ============================= CONFIG ============================= */
+const FILE_GEOJSON = "turkey-admin-level-6.geojson";
+const FILE_POP_CSV = "province_district_2014_2019_2024.csv";
 
-/* ---------------------------- Province mapping --------------------------- */
+/* ============================= TURKEY PLATES ============================= */
 const PLATE_TO_PROVINCE_TR = {
   1:"Adana",2:"Adıyaman",3:"Afyonkarahisar",4:"Ağrı",5:"Amasya",6:"Ankara",7:"Antalya",8:"Artvin",9:"Aydın",10:"Balıkesir",
   11:"Bilecik",12:"Bingöl",13:"Bitlis",14:"Bolu",15:"Burdur",16:"Bursa",17:"Çanakkale",18:"Çankırı",19:"Çorum",20:"Denizli",
@@ -484,6 +473,7 @@ const PLATE_TO_PROVINCE_TR = {
   71:"Kırıkkale",72:"Batman",73:"Şırnak",74:"Bartın",75:"Ardahan",76:"Iğdır",77:"Yalova",78:"Karabük",79:"Kilis",80:"Osmaniye",81:"Düzce"
 };
 
+/* ============================= NORMALIZATION ============================= */
 const TR_CHARMAP = {
   "İ":"I","I":"I","ı":"i",
   "Ş":"S","ş":"s",
@@ -512,18 +502,79 @@ function provinceFileName(trName){
   return folded ? (folded[0].toUpperCase() + folded.slice(1)) : "Province";
 }
 
-const PROVINCE_FILES = Object.entries(PLATE_TO_PROVINCE_TR).map(([plate, tr]) => ({
-  plate: Number(plate),
-  trName: tr,
-  file: provinceFileName(tr) + ".json"
-}));
+/* ============================= SMART PATHS (THE FIX) ============================= */
+/**
+ * GitHub Pages can serve from / (root) or /docs.
+ * And your index may be /repo/ or /repo/docs/.
+ * This tries the likely correct URLs automatically.
+ */
+function repoBasePath(){
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  // /<user>.github.io/<repo>/...
+  if (window.location.hostname.endsWith("github.io") && parts.length >= 1){
+    return "/" + parts[0] + "/"; // repo root
+  }
+  return "/"; // non-GH hosting
+}
+function currentDirUrl(){
+  const u = new URL(window.location.href);
+  u.hash = ""; u.search = "";
+  // ensure ends with /
+  if (!u.pathname.endsWith("/")) u.pathname = u.pathname.substring(0, u.pathname.lastIndexOf("/")+1);
+  return u.toString();
+}
+function buildCandidates(file){
+  const baseRepo = repoBasePath();                // "/re-ilce/"
+  const here = currentDirUrl();                   // ".../re-ilce/" or ".../re-ilce/docs/"
+  const uHere = new URL(file, here).toString();   // relative to current directory
+  const uUp1  = new URL("../" + file, here).toString();
+  const uUp2  = new URL("../../" + file, here).toString();
 
-/* ------------------------------ Number parsing --------------------------- */
+  const uRepoRoot = new URL(file.replace(/^\.\//,""), window.location.origin + baseRepo).toString();
+  const uRepoDocs = new URL("docs/" + file.replace(/^\.\//,""), window.location.origin + baseRepo).toString();
+
+  // de-dup while preserving order
+  const set = new Set();
+  const out = [];
+  for (const u of [uHere, uRepoRoot, uRepoDocs, uUp1, uUp2]){
+    if (!set.has(u)){
+      set.add(u); out.push(u);
+    }
+  }
+  return out;
+}
+
+async function fetchFirstOk(file, asJson){
+  const candidates = buildCandidates(file);
+  let lastErr = null;
+
+  for (const url of candidates){
+    try{
+      const res = await fetch(url, { cache:"no-store" });
+      if (!res.ok){
+        lastErr = `HTTP ${res.status} ${res.statusText} @ ${url}`;
+        continue;
+      }
+      if (asJson){
+        try { return await res.json(); }
+        catch(e){ lastErr = `JSON parse failed @ ${url}`; continue; }
+      } else {
+        return await res.text();
+      }
+    }catch(e){
+      lastErr = `Network/CORS error @ ${url}`;
+    }
+  }
+  throw new Error(`Failed to fetch "${file}". Tried:\n- ${candidates.join("\n- ")}\nLast: ${lastErr}`);
+}
+
+/* ============================= NUMBERS ============================= */
 function parseTrNumber(x){
   if (x === null || x === undefined) return null;
   let s = String(x).trim();
   if (!s) return null;
   s = s.replace(/\s+/g,"").replace(/%/g,"");
+
   if (s.includes(".") && s.includes(",")) {
     s = s.replace(/\./g,"").replace(/,/g,".");
   } else if (s.includes(".")) {
@@ -535,6 +586,7 @@ function parseTrNumber(x){
     if (parts.length === 2 && parts[1].length !== 3) s = parts.join(".");
     else s = parts.join("");
   }
+
   s = s.replace(/[^0-9.\-]/g,"");
   const n = Number(s);
   return Number.isFinite(n) ? n : null;
@@ -542,7 +594,7 @@ function parseTrNumber(x){
 function fmtInt(n){ return Number.isFinite(n) ? Math.round(n).toLocaleString("tr-TR") : "—"; }
 function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
 
-/* ------------------------------ Color helpers ---------------------------- */
+/* ============================= COLORS ============================= */
 function hexToRgb(hex){
   const h = hex.replace("#","").trim();
   const full = (h.length===3) ? h.split("").map(c=>c+c).join("") : h;
@@ -561,27 +613,21 @@ function mix(hexA, hexB, t){
     b: Math.round(a.b + (b.b-a.b)*t),
   });
 }
-function seqGreen(t){
-  return mix("#dcfce7", "#14532d", clamp(t,0,1));
-}
+function seqGreen(t){ return mix("#dcfce7", "#14532d", clamp(t,0,1)); }
 function divRedWhiteGreen(t){
   const x = clamp(t,-1,1);
   if (x < 0) return mix("#7f1d1d", "#f8fafc", (x+1));
   return mix("#f8fafc", "#166534", x);
 }
 function hashColor(s){
-  // deterministic fallback for independents/candidates
   const k = keyify(s);
   let h = 0;
   for (let i=0;i<k.length;i++) h = (h*31 + k.charCodeAt(i)) >>> 0;
-  const hues = [220, 260, 140, 20, 330, 180, 0, 80];
-  const hue = hues[h % hues.length];
-  // simple HSL->RGB-ish via mixing
-  const base = ["#1d4ed8","#6d28d9","#15803d","#c2410c","#be185d","#0f766e","#b91c1c","#a16207"][h % 8];
-  return mix(base, "#ffffff", 0.10);
+  const palette = ["#1d4ed8","#6d28d9","#15803d","#c2410c","#be185d","#0f766e","#b91c1c","#a16207"];
+  return mix(palette[h % palette.length], "#ffffff", 0.10);
 }
 
-/* ------------------------------ Party colors (fixed) --------------------- */
+/* Party colors (strong + aliases) */
 const PARTY_BASE = new Map([
   ["chp", "#e11d48"],
   ["ak-parti", "#f59e0b"],
@@ -601,20 +647,18 @@ const PARTY_BASE = new Map([
 
 function partyKeyAlias(raw){
   const k = keyify(raw);
-  // abbreviations already covered
   if (PARTY_BASE.has(k)) return k;
-
-  // aliases / full names
   if (k.includes("cumhuriyet") && k.includes("halk")) return "chp";
   if (k.includes("adalet") && k.includes("kalkinma")) return "ak-parti";
+  if (k.includes("ak-parti")) return "ak-parti";
+  if (k.includes("akparti")) return "ak-parti";
   if (k.includes("milliyetci") && k.includes("hareket")) return "mhp";
   if (k.includes("iyi")) return "iyi-parti";
-  if (k.includes("demokratik") && k.includes("parti")) return "dem-parti";
+  if (k.includes("dem") && k.includes("parti")) return "dem-parti";
   if (k.includes("yesil") && k.includes("sol")) return "yesil-sol-parti";
-  if (k.includes("isci") && k.includes("partisi")) return "tip";
+  if (k.includes("isci") && k.includes("parti")) return "tip";
   if (k.includes("zafer")) return "zafer-partisi";
   if (k.includes("yeniden") && k.includes("refah")) return "yeniden-refah";
-
   return k;
 }
 function partyColor(raw){
@@ -622,13 +666,16 @@ function partyColor(raw){
   return PARTY_BASE.get(kk) || hashColor(raw);
 }
 
-/* ------------------------------ Layer config ----------------------------- */
+/* ============================= LAYERS ============================= */
 const LAYER_DEFS = [
   { id:"election_winner", label:"Election: winner (margin shading)", kind:"election" },
+
   { id:"pop_total", label:"Population: total", kind:"seq" },
   { id:"pop_change", label:"Population: change (abs)", kind:"div" },
   { id:"pop_change_pct", label:"Population: change (%)", kind:"div" },
+
   { id:"turnout", label:"Turnout (% cast / registered)", kind:"seq_turnout" },
+
   { id:"age_u18_pct", label:"Age: 0–18 (%)", kind:"seq" },
   { id:"age_u18_total", label:"Age: 0–18 (total)", kind:"seq" },
   { id:"age_18p_pct", label:"Age: 18+ (%)", kind:"seq" },
@@ -638,16 +685,10 @@ const LAYER_DEFS = [
 let activeLayerId = "election_winner";
 let activeYear = 2024;
 
-let map, base, geoLayer;
-let turkeyBounds = null;
+const popByKey = new Map();      // "plate:districtKey" => {2014,2019,2024}
+const electionByKey = new Map(); // "plate:districtKey" => election object
 
-let hoverLayer = null;
-let selectedLayer = null;
-
-const popByKey = new Map();
-const electionByKey = new Map();
-
-/* ------------------------------- UI refs --------------------------------- */
+/* ============================= UI REFS ============================= */
 const elLayer = document.getElementById("layerSel");
 const elYear  = document.getElementById("yearSel");
 const elFit   = document.getElementById("fitBtn");
@@ -665,7 +706,7 @@ const elBars  = document.getElementById("bars");
 const elENote = document.getElementById("eNote");
 const elClear = document.getElementById("clearBtn");
 
-/* ------------------------------- Init UI --------------------------------- */
+/* Populate layer selector */
 for (const def of LAYER_DEFS){
   const opt = document.createElement("option");
   opt.value = def.id;
@@ -674,73 +715,87 @@ for (const def of LAYER_DEFS){
   elLayer.appendChild(opt);
 }
 
-elLayer.addEventListener("change", () => {
-  activeLayerId = elLayer.value;
-  refreshStyles();
-  refreshLegend();
-  refreshInfoPanel();
-});
-
-elYear.addEventListener("change", () => {
-  activeYear = Number(elYear.value);
-  refreshStyles();
-  refreshLegend();
-  refreshInfoPanel();
-});
-
-elFit.addEventListener("click", () => {
-  if (turkeyBounds) map.fitBounds(turkeyBounds, { padding:[18,18] });
-});
-
-elClear.addEventListener("click", () => unselect());
-
-/* ------------------------------ Leaflet init ----------------------------- */
-map = L.map("map", { zoomControl: true, preferCanvas: true });
-
-base = L.tileLayer(
-  "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-  { attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 18 }
-).addTo(map);
+/* ============================= MAP INIT ============================= */
+const map = L.map("map", { zoomControl:true, preferCanvas:true });
+L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+  attribution: '&copy; OpenStreetMap &copy; CARTO',
+  maxZoom: 18
+}).addTo(map);
 
 map.setView([39.0, 35.0], 6);
 
-/* If layout changes after load, Leaflet needs this */
-function hardInvalidate(){
-  try { map.invalidateSize(true); } catch {}
-}
+function hardInvalidate(){ try{ map.invalidateSize(true); }catch{} }
 window.addEventListener("resize", () => setTimeout(hardInvalidate, 0));
 setTimeout(hardInvalidate, 0);
 
-/* ------------------------------ Loading pipeline -------------------------- */
+/* ============================= PROVINCE FILES (81 attempts) ============================= */
+const PROVINCE_FILES = Object.entries(PLATE_TO_PROVINCE_TR).map(([plate, tr]) => ({
+  plate: Number(plate),
+  file: provinceFileName(tr) + ".json"
+}));
+
+/* ============================= STATE ============================= */
+let geoLayer = null;
+let turkeyBounds = null;
+let hoverLayer = null;
+let selectedLayer = null;
+
+let cachedScaleKey = null;
+let cachedScale = null;
+
+/* ============================= EVENTS ============================= */
+elLayer.addEventListener("change", () => {
+  activeLayerId = elLayer.value;
+  cachedScaleKey = null; cachedScale = null;
+  refreshStyles();
+  refreshLegend();
+  refreshInfoPanel();
+});
+elYear.addEventListener("change", () => {
+  activeYear = Number(elYear.value);
+  cachedScaleKey = null; cachedScale = null;
+  refreshStyles();
+  refreshLegend();
+  refreshInfoPanel();
+});
+elFit.addEventListener("click", () => {
+  if (turkeyBounds) map.fitBounds(turkeyBounds, { padding:[18,18] });
+});
+elClear.addEventListener("click", () => unselect());
+
+/* ============================= DATA LOAD ============================= */
 (async function boot(){
+  try{
+    // load population
+    const csvText = await fetchFirstOk(FILE_POP_CSV, false);
+    parsePopulationCsv(csvText);
+  }catch(e){
+    console.warn(e);
+    elHint.textContent = "Population CSV failed to load. Check file name/path.";
+  }
+
   let provincesLoaded = 0;
+  // limit concurrency so your browser doesn’t scream
+  provincesLoaded = await loadElectionAllProvincesLimited(8);
 
-  try { await loadPopulationCsv(); }
-  catch(e){ console.warn(e); elHint.textContent = "Population CSV load failed (check filename)."; }
-
-  try { provincesLoaded = await loadElectionAllProvinces(); }
-  catch(e){ console.warn(e); elHint.textContent = "Election JSON load failed (check filenames)."; }
-
-  try { await loadGeoJsonAndDraw(); }
-  catch(e){
+  try{
+    const geo = await fetchFirstOk(FILE_GEOJSON, true);
+    drawGeo(geo);
+  }catch(e){
     console.error(e);
-    elHint.textContent = "GeoJSON load failed (check filename).";
+    elHint.textContent = "GeoJSON failed to load. Open console for exact URL tried.";
     return;
   }
 
-  elHint.textContent = `Hover to preview. Click to pin/unpin. Loaded election provinces: ${provincesLoaded}.`;
   refreshLegend();
-  refreshInfoPanel();
-
-  setTimeout(hardInvalidate, 50);
+  refreshInfoPanel(null);
+  elHint.textContent = `Ready. Provinces loaded: ${provincesLoaded}. Hover to preview, click to pin/unpin.`;
+  setTimeout(hardInvalidate, 60);
   setTimeout(hardInvalidate, 250);
 })();
 
-/* ------------------------------- Loaders --------------------------------- */
-async function loadPopulationCsv(){
-  const res = await fetch(FILE_POP_CSV);
-  if (!res.ok) throw new Error("Population CSV fetch failed: " + res.status);
-  const txt = await res.text();
+/* ============================= POP CSV ============================= */
+function parsePopulationCsv(txt){
   const lines = txt.trim().split(/\r?\n/);
   if (lines.length < 2) return;
 
@@ -760,6 +815,7 @@ async function loadPopulationCsv(){
     provinceToPlate.set(keyify(foldTR(trName)), plate);
     provinceToPlate.set(keyify(provinceFileName(trName)), plate);
   }
+  // common ASCII variants
   provinceToPlate.set(keyify("Sanliurfa"), 63);
   provinceToPlate.set(keyify("Kahramanmaras"), 46);
   provinceToPlate.set(keyify("Igdir"), 76);
@@ -781,8 +837,6 @@ async function loadPopulationCsv(){
     const y2024 = Number(row[idx.y2024]);
 
     popByKey.set(key, {
-      province: prov,
-      district: dist,
       2014: Number.isFinite(y2014) ? y2014 : null,
       2019: Number.isFinite(y2019) ? y2019 : null,
       2024: Number.isFinite(y2024) ? y2024 : null
@@ -790,18 +844,27 @@ async function loadPopulationCsv(){
   }
 }
 
-async function loadElectionAllProvinces(){
+/* ============================= ELECTION JSON LOAD ============================= */
+async function loadElectionAllProvincesLimited(limit){
   let loaded = 0;
-  const tasks = PROVINCE_FILES.map(async p => {
-    try{
-      const res = await fetch(p.file, { cache:"no-store" });
-      if (!res.ok) return;
-      const json = await res.json();
-      parseProvinceElectionJson(p.plate, json);
-      loaded++;
-    }catch(_e){}
-  });
-  await Promise.all(tasks);
+  let i = 0;
+
+  async function worker(){
+    while (i < PROVINCE_FILES.length){
+      const mine = i++;
+      const p = PROVINCE_FILES[mine];
+      try{
+        const json = await fetchFirstOk(p.file, true);
+        parseProvinceElectionJson(p.plate, json);
+        loaded++;
+      }catch(_e){
+        // ignore missing province files (404) silently
+      }
+    }
+  }
+
+  const workers = Array.from({length:limit}, () => worker());
+  await Promise.all(workers);
   return loaded;
 }
 
@@ -816,15 +879,14 @@ function parseProvinceElectionJson(plate, json){
   if (!Array.isArray(json)) return;
 
   for (const row of json){
-    const ilceId = getField(row, ["Ilce Id","İlce Id","İlçe Id","İlçe Id ","IlceId","İlçeId"]);
+    const ilceId  = getField(row, ["Ilce Id","İlce Id","İlçe Id","İlçe Id ","IlceId","İlçeId"]);
     const ilceAdi = getField(row, ["Ilce Adi","İlçe Adı","Ilce Adı","İlçe Adi","IlceAdi","İlçeAdı","İlçe Adi "]);
 
     const idStr = cleanLabel(ilceId);
     const nameStr = cleanLabel(ilceAdi);
-
     if (!nameStr) continue;
 
-    // skip header / percent rows
+    // Skip header/percent rows
     if (!idStr || keyify(idStr) === "oy-orani") continue;
     const idDigits = foldTR(idStr).replace(/\D/g,"");
     if (!idDigits || !/^\d+$/.test(idDigits)) continue;
@@ -835,7 +897,7 @@ function parseProvinceElectionJson(plate, json){
 
     const votes = new Map();
     const skipKeys = new Set([
-      "Ilce Id","İlce Id","İlçe Id","İlçe Id ",
+      "Ilce Id","İlce Id","İlçe Id","İlçe Id ","IlceId","İlçeId",
       "Ilce Adi","İlçe Adı","Ilce Adı","İlçe Adi","IlceAdi","İlçeAdı","İlçe Adi ",
       "Belde Adi","Belde Adı",
       "Kayitli Secmen Sayisi","Kayıtlı Seçmen Sayısı","KayitliSecmenSayisi","KayıtlıSeçmenSayısı",
@@ -872,13 +934,32 @@ function parseProvinceElectionJson(plate, json){
   }
 }
 
-async function loadGeoJsonAndDraw(){
-  const res = await fetch(FILE_GEOJSON);
-  if (!res.ok) throw new Error("GeoJSON fetch failed: " + res.status);
-  const gj = await res.json();
+/* ============================= GEO DRAW ============================= */
+function featurePlate(feature){
+  const net = feature?.properties?.network || "";
+  const m = String(net).match(/TR(\d+)/i);
+  return m ? Number(m[1]) : null;
+}
+function provinceNameFromPlate(plate){
+  return PLATE_TO_PROVINCE_TR[plate] || ("Plate " + plate);
+}
+function featureKey(feature){
+  const plate = featurePlate(feature);
+  const dist = feature?.properties?.name || "";
+  return (plate ?? "null") + ":" + keyify(dist);
+}
+function displayDistrictTitle(feature){
+  const plate = featurePlate(feature);
+  const prov = plate ? provinceNameFromPlate(plate) : "Unknown";
+  const dist = feature?.properties?.name || "—";
+  return `<span>${dist}</span><span class="t2">${prov} • ${plate ?? "—"}</span>`;
+}
+
+function drawGeo(gj){
+  if (geoLayer) geoLayer.remove();
 
   geoLayer = L.geoJSON(gj, {
-    // Remove “map tacks”: ignore point features entirely
+    // remove “map tacks”: ignore point geometries
     filter: (feature) => {
       const t = feature?.geometry?.type;
       return t === "Polygon" || t === "MultiPolygon";
@@ -889,16 +970,12 @@ async function loadGeoJsonAndDraw(){
 
       layer.on("mouseover", () => {
         hoverLayer = layer;
-        if (hoverLayer !== selectedLayer){
-          hoverLayer.setStyle(hoverStyle());
-        }
+        if (hoverLayer !== selectedLayer) hoverLayer.setStyle(hoverStyle());
         if (!selectedLayer) refreshInfoPanel(feature);
       });
 
       layer.on("mouseout", () => {
-        if (hoverLayer && hoverLayer !== selectedLayer){
-          geoLayer.resetStyle(hoverLayer);
-        }
+        if (hoverLayer && hoverLayer !== selectedLayer) geoLayer.resetStyle(hoverLayer);
         hoverLayer = null;
         if (!selectedLayer) refreshInfoPanel(null);
       });
@@ -912,36 +989,23 @@ async function loadGeoJsonAndDraw(){
 
   turkeyBounds = geoLayer.getBounds();
   map.fitBounds(turkeyBounds, { padding:[18,18] });
+  hardInvalidate();
 }
 
-/* ------------------------------ Keys / display --------------------------- */
-function featurePlate(feature){
-  const net = feature?.properties?.network || "";
-  const m = String(net).match(/TR(\d+)/i);
-  return m ? Number(m[1]) : null;
-}
-function provinceNameFromPlate(plate){
-  return PLATE_TO_PROVINCE_TR[plate] || ("Plate " + plate);
-}
-function displayDistrictTitle(feature){
-  const plate = featurePlate(feature);
-  const prov = plate ? provinceNameFromPlate(plate) : "Unknown";
-  const dist = feature?.properties?.name || "—";
-  return `<span>${dist}</span><span class="t2">${prov} • ${plate ?? "—"}</span>`;
-}
-function featureKey(feature){
-  const plate = featurePlate(feature);
-  const dist = feature?.properties?.name || "";
-  return (plate ?? "null") + ":" + keyify(dist);
-}
+/* ============================= LAYER VALUES ============================= */
 function prevYear(y){ return (y===2024)?2019 : (y===2019)?2014 : null; }
 
 function dataForFeature(feature){
   const key = featureKey(feature);
-  return { key, plate: featurePlate(feature), pop: popByKey.get(key) || null, elec: electionByKey.get(key) || null, feature };
+  return {
+    key,
+    plate: featurePlate(feature),
+    pop: popByKey.get(key) || null,
+    elec: electionByKey.get(key) || null,
+    feature
+  };
 }
 
-/* ------------------------------ Layer values ----------------------------- */
 function valueForLayer(d){
   const def = LAYER_DEFS.find(x=>x.id===activeLayerId);
   if (!def) return null;
@@ -989,10 +1053,7 @@ function valueForLayer(d){
   return null;
 }
 
-/* ------------------------------ Scales/Legend ---------------------------- */
-let cachedScaleKey = null;
-let cachedScale = null;
-
+/* ============================= SCALE / LEGEND ============================= */
 function getScaleForActiveLayer(){
   const k = activeLayerId + ":" + activeYear;
   if (k === cachedScaleKey && cachedScale) return cachedScale;
@@ -1094,7 +1155,7 @@ function refreshLegend(){
   elLegMax.textContent = "—";
 }
 
-/* ------------------------------ Style logic ------------------------------ */
+/* ============================= STYLES ============================= */
 function baseStyle(feature){
   const d = dataForFeature(feature);
   const def = LAYER_DEFS.find(x=>x.id===activeLayerId);
@@ -1107,13 +1168,11 @@ function baseStyle(feature){
     if (e?.winner){
       const base = partyColor(e.winner);
 
-      // EXTREME but readable shading:
-      // close margin => lighter (but not washed out)
-      // landslide => almost pure party color
+      // strong party color; close races lighten (but still vivid)
       const m = Number.isFinite(e.margin) ? clamp(e.margin, 0, 0.25) : 0.10;
-      const mNorm = clamp(m / 0.25, 0, 1);     // 0 close, 1 landslide
+      const mNorm = clamp(m / 0.25, 0, 1);
       const closeFactor = 1 - Math.pow(mNorm, 0.65);
-      const mixAmt = 0.05 + 0.50 * closeFactor; // 0.05..0.55
+      const mixAmt = 0.06 + 0.50 * closeFactor; // 0.06..0.56
       fill = mix(base, "#ffffff", mixAmt);
     } else {
       fillOpacity = 0.78;
@@ -1147,14 +1206,12 @@ function baseStyle(feature){
     lineJoin: "round"
   };
 }
-
 function hoverStyle(){
   return { color: "#2563eb", weight: 2.2, opacity: 1, fillOpacity: 0.96 };
 }
 function selectedStyle(){
   return { color: "#0f172a", weight: 3.2, opacity: 1, fillOpacity: 0.97 };
 }
-
 function refreshStyles(){
   if (!geoLayer) return;
   geoLayer.setStyle(baseStyle);
@@ -1162,7 +1219,7 @@ function refreshStyles(){
   if (hoverLayer && hoverLayer !== selectedLayer) hoverLayer.setStyle(hoverStyle());
 }
 
-/* ------------------------------ Selection logic -------------------------- */
+/* ============================= SELECTION ============================= */
 function select(layer, feature){
   if (selectedLayer) geoLayer.resetStyle(selectedLayer);
   selectedLayer = layer;
@@ -1179,7 +1236,7 @@ function unselect(){
   refreshStyles();
 }
 
-/* ------------------------------ Info panel -------------------------------- */
+/* ============================= INFO PANEL ============================= */
 function refreshInfoPanel(featureOrNull){
   let feature = featureOrNull;
   if (selectedLayer?.feature) feature = selectedLayer.feature;
@@ -1200,9 +1257,11 @@ function refreshInfoPanel(featureOrNull){
   const distLabel = feature?.properties?.name || "—";
 
   elDName.textContent = distLabel;
-  elDSub.innerHTML = `<span class="chip"><span class="sw" style="background:#60a5fa"></span>${provTr}</span>
-                      <span class="chip"><span class="sw" style="background:#34d399"></span>Plate ${plate ?? "—"}</span>
-                      ${selectedLayer ? `<span class="chip"><span class="sw" style="background:#0f172a"></span>Pinned</span>` : ""}`;
+  elDSub.innerHTML = `
+    <span class="chip"><span class="sw" style="background:#60a5fa"></span>${provTr}</span>
+    <span class="chip"><span class="sw" style="background:#34d399"></span>Plate ${plate ?? "—"}</span>
+    ${selectedLayer ? `<span class="chip"><span class="sw" style="background:#0f172a"></span>Pinned</span>` : ""}
+  `;
 
   const popY = d.pop ? d.pop[String(activeYear)] : null;
   const py = prevYear(activeYear);
@@ -1214,7 +1273,6 @@ function refreshInfoPanel(featureOrNull){
   const reg = d.elec?.registered ?? null;
   const cast = d.elec?.cast ?? null;
   const valid = d.elec?.valid ?? null;
-
   const turnout = (Number.isFinite(reg) && reg>0 && Number.isFinite(cast)) ? (cast/reg) : null;
 
   const u18 = (Number.isFinite(pop2024) && pop2024>0 && Number.isFinite(reg)) ? clamp(pop2024 - reg, 0, pop2024) : null;
@@ -1294,30 +1352,8 @@ function refreshInfoPanel(featureOrNull){
   }).join("");
 }
 
-/* ------------------------------ Styling refresh -------------------------- */
-function refreshLegendAndStyles(){
-  refreshLegend();
-  refreshStyles();
-}
-function refreshLegend(){ /* filled above */ }
-function refreshStyles(){ /* filled above */ }
-
-/* ------------------------------ Auto refresh hooks ----------------------- */
-document.getElementById("layerSel").addEventListener("change", refreshLegendAndStyles);
-document.getElementById("yearSel").addEventListener("change", refreshLegendAndStyles);
-
-/* ------------------------------ Final: legend init ----------------------- */
+/* ============================= FINAL HOOKS ============================= */
 refreshLegend();
-
-/* ------------------------------ Styles helpers --------------------------- */
-function baseStyle(feature){ return window.baseStyle(feature); }
-function hoverStyle(){ return window.hoverStyle(); }
-function selectedStyle(){ return window.selectedStyle(); }
-
-// expose style fns for refreshLegendAndStyles
-window.baseStyle = baseStyle;
-window.hoverStyle = hoverStyle;
-window.selectedStyle = selectedStyle;
 </script>
 </body>
 </html>
