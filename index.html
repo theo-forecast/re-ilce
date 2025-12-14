@@ -1283,9 +1283,9 @@ function refreshInfoPanel(featureOrNull){
   const metrics = [
     { k:`Population (${activeYear})`, v: fmtInt(popY), s: py ? `vs ${py}: ${popChange===null?"—":(popChange>=0?"+":"") + fmtInt(popChange)}` : "No previous year" },
     { k:`Pop change %`, v: popChangePct===null ? "—" : ((popChangePct>=0?"+":"") + (popChangePct*100).toFixed(2).replace(".",",") + "%"), s: py ? `(${py}→${activeYear})` : "—" },
-    { k:`Registered (18+)`, v: fmtInt(reg)},
-    { k:`Votes cast`, v: fmtInt(cast)},
-    { k:`Valid votes`, v: fmtInt(valid)},
+    { k:`Registered (18+)`, v: fmtInt(reg), s: "people"},
+    { k:`Votes cast`, v: fmtInt(cast), s: "people"},
+    { k:`Valid votes`, v: fmtInt(valid), s: "people"},
     { k:`Turnout`, v: turnout===null ? "—" : (turnout*100).toFixed(2).replace(".",",") + "%", s: "cast / registered" },
     { k:`0–18 total (est.)`, v: fmtInt(u18), s: "2024 pop − registered" },
     { k:`0–18 %`, v: u18pct===null ? "—" : (u18pct*100).toFixed(2).replace(".",",") + "%", s: "share of 2024 pop" },
