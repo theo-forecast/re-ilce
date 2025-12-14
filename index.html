@@ -2,89 +2,117 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turkey Redistricter</title>
 
-  <!-- Leaflet (CDN) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+  <!-- Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
 
   <style>
     :root{
-      --bg:#f4f6fb;
-      --panel:#ffffff;
-      --ink:#0b1220;
-      --muted:#516079;
-      --border:#d9e1ef;
-      --shadow:0 14px 40px rgba(16,24,40,.12);
-      --shadow2:0 8px 24px rgba(16,24,40,.10);
-      --radius:18px;
-
-      --control:#ffffff;
-      --controlBorder:#d7deea;
-
-      --line:#96a3b8;
-      --line2:#6b7a92;
-
-      --focus:#111827;
-      --focusGlow:0 0 0 4px rgba(17,24,39,.10);
+      --bg: #f6f8fc;
+      --panel: #ffffff;
+      --panel2: #fbfcff;
+      --text: #0f172a;
+      --muted: #475569;
+      --muted2:#64748b;
+      --border:#e2e8f0;
+      --shadow: 0 18px 55px rgba(15,23,42,.10);
+      --shadow2: 0 10px 30px rgba(15,23,42,.08);
+      --radius: 18px;
+      --radius2: 14px;
+      --accent:#2563eb;
+      --accent2:#0ea5e9;
+      --ok:#16a34a;
+      --bad:#dc2626;
+      --chip:#eef2ff;
     }
 
+    *{ box-sizing:border-box; }
     html,body{ height:100%; }
     body{
       margin:0;
+      background:
+        radial-gradient(1200px 700px at 12% 8%, rgba(37,99,235,.08), transparent 60%),
+        radial-gradient(900px 600px at 85% 15%, rgba(14,165,233,.10), transparent 55%),
+        radial-gradient(800px 600px at 70% 85%, rgba(22,163,74,.08), transparent 55%),
+        var(--bg);
+      color:var(--text);
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      background: radial-gradient(1100px 700px at 20% -10%, #ffffff 0%, var(--bg) 55%, var(--bg) 100%);
-      color:var(--ink);
       overflow:hidden;
     }
 
-    /* Layout */
     .app{
       height:100%;
       display:grid;
-      grid-template-rows: 64px 1fr;
-      gap:14px;
-      padding:14px;
-      box-sizing:border-box;
+      grid-template-columns: 1fr 360px;
+      gap: 16px;
+      padding: 16px;
     }
 
-    .topbar{
-      background:var(--panel);
-      border:1px solid var(--border);
+    .map-wrap{
+      position:relative;
       border-radius: var(--radius);
-      box-shadow: var(--shadow2);
+      overflow:hidden;
+      box-shadow: var(--shadow);
+      background: #fff;
+      border:1px solid rgba(226,232,240,.75);
+    }
+
+    #map{
+      height:100%;
+      width:100%;
+    }
+
+    /* Top bar */
+    .topbar{
+      position:absolute;
+      z-index: 800;
+      top: 14px;
+      left: 14px;
+      right: 14px;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      padding:10px 12px;
       gap:12px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(226,232,240,.9);
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(8px);
     }
-
     .brand{
       display:flex;
       align-items:center;
-      gap:12px;
-      min-width: 260px;
+      gap:10px;
+      min-width: 220px;
     }
     .dot{
-      width:11px;height:11px;border-radius:999px;
-      background: conic-gradient(from 190deg, #16a34a, #ef4444, #3b82f6, #16a34a);
-      box-shadow:0 0 0 5px rgba(22,163,74,.09);
+      width:10px; height:10px; border-radius:999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 0 4px rgba(37,99,235,.12);
     }
-    .brand h1{
-      font-size:16px;
-      margin:0;
-      letter-spacing:.2px;
+    .brand .title{
+      font-weight: 800;
+      letter-spacing:-0.02em;
+      line-height:1.05;
     }
-    .brand .sub{
-      margin:0;
+    .brand .subtitle{
       font-size:12px;
-      color:var(--muted);
+      color: var(--muted2);
       margin-top:2px;
     }
-    .brandText{ display:flex; flex-direction:column; line-height:1.05; }
-
     .controls{
       display:flex;
       align-items:center;
@@ -92,1474 +120,1294 @@
       flex-wrap:wrap;
       justify-content:flex-end;
     }
-
-    .pill{
+    .control{
       display:flex;
       align-items:center;
       gap:8px;
-      background:var(--control);
-      border:1px solid var(--controlBorder);
+      padding: 6px 10px;
       border-radius: 999px;
-      padding:6px 10px;
-      box-shadow: 0 6px 14px rgba(16,24,40,.06);
+      border:1px solid rgba(226,232,240,.95);
+      background: rgba(248,250,252,.9);
     }
-
-    label{
+    .control label{
       font-size:12px;
-      color:var(--muted);
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: .01em;
+    }
+    select{
+      appearance:none;
+      border:1px solid rgba(226,232,240,.0);
+      background: transparent;
+      font-weight:700;
+      color: var(--text);
+      padding: 4px 28px 4px 10px;
+      border-radius: 999px;
+      outline:none;
+      cursor:pointer;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #64748b 50%),
+        linear-gradient(135deg, #64748b 50%, transparent 50%),
+        linear-gradient(to right, transparent, transparent);
+      background-position:
+        calc(100% - 16px) 50%,
+        calc(100% - 11px) 50%,
+        0 0;
+      background-size: 5px 5px, 5px 5px, 100% 100%;
+      background-repeat:no-repeat;
+    }
+    .btn{
+      border:none;
+      cursor:pointer;
+      font-weight:800;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: var(--text);
+      color:#fff;
+      box-shadow: 0 10px 22px rgba(15,23,42,.14);
+      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
       user-select:none;
     }
-
-    select, button{
-      font: inherit;
-      outline:none;
-      border:none;
-      background:transparent;
-    }
-
-    select{
-      font-size:13px;
-      color:var(--ink);
-      padding:2px 2px;
-      cursor:pointer;
-      max-width: 260px;
-    }
-
-    .btn{
-      background: #0b1220;
-      color:#fff;
-      border-radius: 999px;
-      padding:8px 12px;
-      font-size:13px;
-      cursor:pointer;
-      box-shadow: 0 14px 28px rgba(11,18,32,.18);
-      border:1px solid rgba(11,18,32,.12);
-      transition: transform .06s ease, box-shadow .12s ease;
-    }
-    .btn:hover{ transform: translateY(-1px); box-shadow: 0 18px 36px rgba(11,18,32,.20); }
-    .btn:active{ transform: translateY(0px); }
+    .btn:hover{ transform: translateY(-1px); box-shadow: 0 14px 28px rgba(15,23,42,.16); }
+    .btn:active{ transform: translateY(0px); opacity:.92; }
 
     .hint{
-      font-size:12px;
-      color:var(--muted);
-      padding-right:6px;
-      user-select:none;
-    }
-
-    .main{
-      display:grid;
-      grid-template-columns: 1fr 380px;
-      gap:14px;
-      min-height:0;
-    }
-
-    #mapWrap{
-      background: var(--panel);
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      font-size: 12px;
+      color: var(--muted2);
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(241,245,249,.85);
+      border:1px solid rgba(226,232,240,.85);
+      white-space:nowrap;
+      max-width: 420px;
       overflow:hidden;
-      position:relative;
-      min-height:0;
+      text-overflow: ellipsis;
     }
-
-    #map{ height:100%; width:100%; }
 
     /* Right panel */
-    .side{
+    .panel{
+      height:100%;
       display:flex;
       flex-direction:column;
-      gap:12px;
-      min-height:0;
+      gap: 14px;
+      min-width: 320px;
     }
 
     .card{
-      background: var(--panel);
-      border:1px solid var(--border);
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(226,232,240,.9);
       border-radius: var(--radius);
       box-shadow: var(--shadow2);
-      padding:12px 12px;
+      padding: 14px;
+      overflow:hidden;
     }
-    .card h2{
-      margin:0 0 8px 0;
-      font-size:13px;
-      letter-spacing:.2px;
+    .card h3{
+      margin:0 0 10px 0;
+      font-size: 14px;
+      letter-spacing: -0.01em;
     }
-    .card .small{
-      font-size:12px;
-      color:var(--muted);
-      margin:0;
-    }
+    .muted{ color: var(--muted2); font-size: 12px; line-height:1.35; }
 
-    .legendRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-top:8px;
-    }
-    .legendBar{
-      height:10px;
+    .legendbar{
+      height: 10px;
       border-radius: 999px;
-      border:1px solid rgba(16,24,40,.12);
-      flex:1;
-      overflow:hidden;
-      background:#eef2f7;
+      background: linear-gradient(90deg, #dcfce7, #166534);
+      border: 1px solid rgba(15,23,42,.10);
+      margin: 10px 0 8px;
     }
-    .legendLabels{
+    .legendlabels{
       display:flex;
-      justify-content:space-between;
-      font-size:11px;
-      color:var(--muted);
-      margin-top:8px;
-    }
-
-    .swatches{
-      margin-top:10px;
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-      max-height:160px;
-      overflow:auto;
-      padding-right:4px;
-    }
-    .swatch{
-      display:flex;
-      align-items:center;
       justify-content:space-between;
       gap:10px;
       font-size:12px;
-      color:var(--ink);
-    }
-    .swatchLeft{
-      display:flex; align-items:center; gap:8px; min-width:0;
-    }
-    .chip{
-      width:12px; height:12px; border-radius:4px;
-      border:1px solid rgba(0,0,0,.10);
-      box-shadow: 0 2px 6px rgba(0,0,0,.08);
-      flex:0 0 auto;
-    }
-    .swatchName{
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      max-width:240px;
+      color: var(--muted);
+      font-weight:700;
     }
 
-    .districtTitle{
+    .district-header{
       display:flex;
       align-items:flex-start;
       justify-content:space-between;
       gap:10px;
-      margin-bottom:10px;
     }
-    .districtTitle h3{
+    .district-name{
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height:1.1;
       margin:0;
-      font-size:16px;
-      letter-spacing:.2px;
-      line-height:1.15;
     }
-    .badge{
-      font-size:11px;
-      color:#0b1220;
-      background:#eef2f7;
-      border:1px solid rgba(11,18,32,.10);
-      padding:4px 8px;
-      border-radius:999px;
+    .district-sub{
+      margin-top: 3px;
+      font-size:12px;
+      color: var(--muted);
+      font-weight:700;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding: 4px 10px;
+      background: var(--chip);
+      border: 1px solid rgba(99,102,241,.18);
+      color: #3730a3;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .chip .sw{ width:10px; height:10px; border-radius: 3px; background:#94a3b8; }
+
+    .clear-btn{
+      border:none;
+      cursor:pointer;
+      font-weight:900;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(241,245,249,.95);
+      border: 1px solid rgba(226,232,240,.95);
+      color: var(--text);
+      transition: transform .12s ease, background .12s ease;
+      white-space:nowrap;
+    }
+    .clear-btn:hover{ transform: translateY(-1px); background: rgba(226,232,240,.85); }
+    .clear-btn:active{ transform: translateY(0px); opacity:.92; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top: 12px;
+    }
+    .metric{
+      padding: 10px 10px;
+      border-radius: var(--radius2);
+      background: rgba(248,250,252,.92);
+      border: 1px solid rgba(226,232,240,.92);
+    }
+    .metric .k{
+      font-size: 11px;
+      color: var(--muted2);
+      font-weight: 800;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+    }
+    .metric .v{
+      margin-top: 5px;
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: -0.01em;
+    }
+    .metric .s{
+      margin-top: 2px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .section-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-top: 10px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(226,232,240,.95);
+    }
+    .section-title h4{
+      margin:0;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: -0.01em;
+    }
+    .section-title .small{
+      font-size: 12px;
+      color: var(--muted2);
+      font-weight: 800;
       white-space:nowrap;
     }
 
-    .kv{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px 12px;
-      margin-top:8px;
-    }
-    .k{
-      font-size:11px;
-      color:var(--muted);
-      margin:0 0 2px 0;
-    }
-    .v{
-      font-size:13px;
-      margin:0;
-      color:var(--ink);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .divider{
-      height:1px;
-      background: linear-gradient(90deg, transparent, rgba(81,96,121,.25), transparent);
-      margin:10px 0;
-    }
-
     .bars{
+      margin-top: 10px;
       display:flex;
       flex-direction:column;
-      gap:8px;
-      margin-top:8px;
+      gap: 8px;
     }
-    .barRow{
+    .bar-row{
       display:grid;
-      grid-template-columns: 120px 1fr 70px;
-      gap:8px;
+      grid-template-columns: 120px 1fr 150px;
+      gap:10px;
       align-items:center;
-      font-size:12px;
     }
-    .barName{ color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .bar{
-      height:10px;
-      border-radius: 999px;
-      background:#eef2f7;
-      border:1px solid rgba(16,24,40,.10);
+    .bar-row .pname{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-weight: 900;
+      font-size: 12px;
+      color: var(--text);
       overflow:hidden;
-      position:relative;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
-    .barFill{
+    .swatch{
+      width:10px; height:10px; border-radius: 3px;
+      background:#94a3b8;
+      box-shadow: 0 0 0 3px rgba(148,163,184,.20);
+      flex:0 0 auto;
+    }
+    .track{
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(226,232,240,.9);
+      border: 1px solid rgba(148,163,184,.18);
+      overflow:hidden;
+    }
+    .fill{
       height:100%;
-      border-radius:999px;
-      width:0%;
+      border-radius: 999px;
+      width: 0%;
+      background: #64748b;
+      transition: width .18s ease;
     }
-    .barVal{
+    .bar-row .val{
       font-variant-numeric: tabular-nums;
       text-align:right;
-      color:var(--muted);
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      white-space:nowrap;
     }
 
     /* Leaflet tweaks */
+    .leaflet-control-zoom{
+      border-radius: 14px !important;
+      overflow:hidden;
+      box-shadow: var(--shadow2);
+      border: 1px solid rgba(226,232,240,.95);
+    }
+    .leaflet-bar a{
+      background: rgba(255,255,255,.95) !important;
+      color: var(--text) !important;
+    }
     .leaflet-container{
-      background:#dde7f4;
+      background: #ffffff;
       outline:none;
-    }
-    .leaflet-control-zoom a{
-      border-radius:12px !important;
-      box-shadow: 0 10px 24px rgba(16,24,40,.14);
-      border:1px solid rgba(16,24,40,.10) !important;
-    }
-    .leaflet-control-attribution{
-      background: rgba(255,255,255,.85) !important;
-      border-radius: 10px;
-      margin:8px !important;
-      border:1px solid rgba(16,24,40,.10);
+      font: inherit;
     }
 
-    /* Floating tooltip (hover) */
-    .tip{
-      position:absolute;
-      pointer-events:none;
-      transform: translate(12px, 12px);
-      background: rgba(255,255,255,.92);
-      border:1px solid rgba(16,24,40,.14);
+    .district-tooltip{
+      background: rgba(255,255,255,.95);
+      border: 1px solid rgba(226,232,240,.95);
+      color: var(--text);
       border-radius: 12px;
-      padding:8px 10px;
-      box-shadow: 0 16px 40px rgba(16,24,40,.18);
-      font-size:12px;
-      color:var(--ink);
-      opacity:0;
-      transition: opacity .10s ease;
-      max-width: 320px;
-      backdrop-filter: blur(8px);
+      box-shadow: var(--shadow2);
+      padding: 8px 10px;
+      font-weight: 900;
+      letter-spacing: -0.01em;
     }
-    .tip b{ font-size:12px; }
-    .tip .tmuted{ color:var(--muted); font-size:11px; }
-
-    @media (max-width: 980px){
-      body{ overflow:auto; }
-      .app{ height:auto; }
-      .main{ grid-template-columns: 1fr; }
-      .side{ order:2; }
-      #mapWrap{ height: 65vh; }
+    .district-tooltip .t2{
+      display:block;
+      margin-top:2px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
     }
   </style>
 </head>
 
 <body>
   <div class="app">
-    <div class="topbar">
-      <div class="brand">
-        <div class="dot"></div>
-        <div class="brandText">
-          <h1>Turkey Redistricter</h1>
-          <p class="sub">all districts • elections • population • turnout • age</p>
+    <div class="map-wrap">
+      <div class="topbar">
+        <div class="brand">
+          <div class="dot"></div>
+          <div>
+            <div class="title">Turkey Redistricter</div>
+            <div class="subtitle">all districts • elections • population • turnout • age</div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="control">
+            <label for="layerSel">Layer</label>
+            <select id="layerSel"></select>
+          </div>
+          <div class="control">
+            <label for="yearSel">Year</label>
+            <select id="yearSel">
+              <option value="2024" selected>2024</option>
+              <option value="2019">2019</option>
+              <option value="2014">2014</option>
+            </select>
+          </div>
+          <button class="btn" id="fitBtn" title="Fit Turkey">Fit</button>
+          <div class="hint" id="hintText" title="Tip">
+            Hover to preview. Click to pin/unpin. (Turnout & age use 2024 pop + 2024 registered.)
+          </div>
         </div>
       </div>
 
-      <div class="controls">
-        <div class="pill">
-          <label for="layerSel">Layer</label>
-          <select id="layerSel"></select>
-        </div>
-
-        <div class="pill" title="Used for Population / Population Change. Age & Turnout use 2024 population + 2024 registered voters.">
-          <label for="yearSel">Year</label>
-          <select id="yearSel">
-            <option value="2014">2014</option>
-            <option value="2019">2019</option>
-            <option value="2024" selected>2024</option>
-          </select>
-        </div>
-
-        <button class="btn" id="fitBtn">Fit</button>
-        <span class="hint" id="tinyNote"></span>
-      </div>
+      <div id="map"></div>
     </div>
 
-    <div class="main">
-      <div id="mapWrap">
-        <div id="map"></div>
-        <div id="tip" class="tip"></div>
+    <div class="panel">
+      <div class="card" id="legendCard">
+        <h3>Legend</h3>
+        <div class="muted" id="legendDesc">Population total (light green → dark green).</div>
+        <div class="legendbar" id="legendBar"></div>
+        <div class="legendlabels"><span id="legMin">—</span><span id="legMax">—</span></div>
       </div>
 
-      <div class="side">
-        <div class="card" id="legendCard">
-          <h2>Legend</h2>
-          <p class="small" id="legendTitle">—</p>
-          <div class="legendRow">
-            <div class="legendBar" id="legendBar"></div>
+      <div class="card" id="districtCard">
+        <div class="district-header">
+          <div>
+            <p class="district-name" id="dName">District</p>
+            <div class="district-sub" id="dSub">Hover or click a district.</div>
           </div>
-          <div class="legendLabels" id="legendLabels">
-            <span>—</span><span>—</span>
-          </div>
-          <div class="swatches" id="partySwatches" style="display:none;"></div>
+          <button class="clear-btn" id="clearBtn" style="display:none;">Clear</button>
         </div>
 
-        <div class="card" id="districtCard">
-          <div class="districtTitle">
-            <div>
-              <h3 id="dName">Hover or click a district</h3>
-              <p class="small" id="dSub">Selection will pin details.</p>
-            </div>
-            <span class="badge" id="dBadge">—</span>
-          </div>
-
-          <div class="kv" id="kvGrid">
-            <div><p class="k">Population (year)</p><p class="v" id="popYear">—</p></div>
-            <div><p class="k">Population 2024</p><p class="v" id="pop2024">—</p></div>
-            <div><p class="k">Pop change</p><p class="v" id="popChg">—</p></div>
-            <div><p class="k">Pop change %</p><p class="v" id="popChgPct">—</p></div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="kv">
-            <div><p class="k">Registered (18+)</p><p class="v" id="reg18">—</p></div>
-            <div><p class="k">Votes cast</p><p class="v" id="cast">—</p></div>
-            <div><p class="k">Turnout</p><p class="v" id="turnout">—</p></div>
-            <div><p class="k">Valid votes</p><p class="v" id="valid">—</p></div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="kv">
-            <div><p class="k">0–18 total (est.)</p><p class="v" id="u18Total">—</p></div>
-            <div><p class="k">0–18 %</p><p class="v" id="u18Pct">—</p></div>
-            <div><p class="k">18+ total</p><p class="v" id="a18Total">—</p></div>
-            <div><p class="k">18+ %</p><p class="v" id="a18Pct">—</p></div>
-          </div>
-
-          <div class="divider"></div>
-
-          <h2 style="margin:0 0 6px 0; font-size:13px;">Election (winner)</h2>
-          <p class="small" id="winLine">—</p>
-
-          <div class="bars" id="topBars"></div>
+        <div class="grid" id="metricsGrid">
+          <!-- filled by JS -->
         </div>
+
+        <div class="section-title">
+          <h4>Election (winner)</h4>
+          <div class="small" id="eSmall">Winner shading = lighter when margin is small</div>
+        </div>
+        <div class="muted" id="eNote" style="margin-top:6px;">No election data for this district (missing province JSON or join mismatch).</div>
+        <div class="bars" id="bars" style="display:none;"></div>
       </div>
     </div>
   </div>
 
 <script>
-/* =========================
-   Files (same folder)
-========================= */
+/**
+ * NOTE: fetch() won’t work if you open this as file://
+ * Use GitHub Pages (https://...) or any local server.
+ */
+
+/* ------------------------------- Files ---------------------------------- */
 const FILE_GEOJSON = "turkey-admin-level-6.geojson";
-const FILE_POPCSV  = "province_district_2014_2019_2024.csv";
+const FILE_POP_CSV = "province_district_2014_2019_2024.csv";
 
-/* =========================
-   Province plate mapping
-========================= */
-const PLATE_TO_PROVINCE = [
-  null,
-  "Adana","Adıyaman","Afyonkarahisar","Ağrı","Amasya","Ankara","Antalya","Artvin","Aydın","Balıkesir",
-  "Bilecik","Bingöl","Bitlis","Bolu","Burdur","Bursa","Çanakkale","Çankırı","Çorum","Denizli",
-  "Diyarbakır","Edirne","Elazığ","Erzincan","Erzurum","Eskişehir","Gaziantep","Giresun","Gümüşhane","Hakkari",
-  "Hatay","Isparta","Mersin","İstanbul","İzmir","Kars","Kastamonu","Kayseri","Kırklareli","Kırşehir",
-  "Kocaeli","Konya","Kütahya","Malatya","Manisa","Kahramanmaraş","Mardin","Muğla","Muş","Nevşehir",
-  "Niğde","Ordu","Rize","Sakarya","Samsun","Siirt","Sinop","Sivas","Tekirdağ","Tokat",
-  "Trabzon","Tunceli","Şanlıurfa","Uşak","Van","Yozgat","Zonguldak","Aksaray","Bayburt","Karaman",
-  "Kırıkkale","Batman","Şırnak","Bartın","Ardahan","Iğdır","Yalova","Karabük","Kilis","Osmaniye","Düzce"
-];
+/* ---------------------------- Province mapping --------------------------- */
+/* Plate -> official name (Turkish). Filenames are derived by TR-folding + TitleCase. */
+const PLATE_TO_PROVINCE_TR = {
+  1:"Adana",2:"Adıyaman",3:"Afyonkarahisar",4:"Ağrı",5:"Amasya",6:"Ankara",7:"Antalya",8:"Artvin",9:"Aydın",10:"Balıkesir",
+  11:"Bilecik",12:"Bingöl",13:"Bitlis",14:"Bolu",15:"Burdur",16:"Bursa",17:"Çanakkale",18:"Çankırı",19:"Çorum",20:"Denizli",
+  21:"Diyarbakır",22:"Edirne",23:"Elazığ",24:"Erzincan",25:"Erzurum",26:"Eskişehir",27:"Gaziantep",28:"Giresun",29:"Gümüşhane",30:"Hakkâri",
+  31:"Hatay",32:"Isparta",33:"Mersin",34:"İstanbul",35:"İzmir",36:"Kars",37:"Kastamonu",38:"Kayseri",39:"Kırklareli",40:"Kırşehir",
+  41:"Kocaeli",42:"Konya",43:"Kütahya",44:"Malatya",45:"Manisa",46:"Kahramanmaraş",47:"Mardin",48:"Muğla",49:"Muş",50:"Nevşehir",
+  51:"Niğde",52:"Ordu",53:"Rize",54:"Sakarya",55:"Samsun",56:"Siirt",57:"Sinop",58:"Sivas",59:"Tekirdağ",60:"Tokat",
+  61:"Trabzon",62:"Tunceli",63:"Şanlıurfa",64:"Uşak",65:"Van",66:"Yozgat",67:"Zonguldak",68:"Aksaray",69:"Bayburt",70:"Karaman",
+  71:"Kırıkkale",72:"Batman",73:"Şırnak",74:"Bartın",75:"Ardahan",76:"Iğdır",77:"Yalova",78:"Karabük",79:"Kilis",80:"Osmaniye",81:"Düzce"
+};
+const PROVINCE_FILES = Object.entries(PLATE_TO_PROVINCE_TR).map(([plate, tr]) => ({
+  plate: Number(plate),
+  trName: tr,
+  file: provinceFileName(tr) + ".json"
+}));
 
-const provinceToPlate = new Map();
-for (let p=1; p<PLATE_TO_PROVINCE.length; p++){
-  provinceToPlate.set(keyify(PLATE_TO_PROVINCE[p]), p);
-}
-
-/* =========================
-   UI Layers
-========================= */
-const LAYERS = [
-  { id:"pop", name:"Population (selected year)", kind:"sequential", legend:"Population" },
-  { id:"popchg", name:"Population change (count)", kind:"diverging", legend:"Population change" },
-  { id:"popchgpct", name:"Population change (%)", kind:"diverging", legend:"Population change (%)" },
-  { id:"e_win", name:"Election: winner (margin shading)", kind:"categorical", legend:"Election winner" },
-  { id:"turnout", name:"Turnout (%)", kind:"sequential", legend:"Turnout" },
-  { id:"u18pct", name:"Age: 0–18 (% of total)", kind:"sequential", legend:"0–18 share" },
-  { id:"u18tot", name:"Age: 0–18 (total)", kind:"sequential", legend:"0–18 total" },
-  { id:"a18pct", name:"Age: 18+ (% of total)", kind:"sequential", legend:"18+ share" },
-  { id:"a18tot", name:"Age: 18+ (total)", kind:"sequential", legend:"18+ total" },
-];
-
-const state = {
-  layer: "pop",
-  year: 2024,
-  geojson: null,
-  features: [],
-  popIndex: new Map(),      // key (plate|DISTKEY) => {2014,2019,2024}
-  electIndex: new Map(),    // key (plate|DISTKEY) => election object
-  partyUniverse: new Map(), // party -> count occurrences
-  scales: {},               // computed domains per layer
-  selected: null,           // leaflet layer (selected)
-  hovered: null
+/* ---------------------------- Text normalization ------------------------- */
+const TR_CHARMAP = {
+  "İ":"I","I":"I","ı":"i",
+  "Ş":"S","ş":"s",
+  "Ğ":"G","ğ":"g",
+  "Ü":"U","ü":"u",
+  "Ö":"O","ö":"o",
+  "Ç":"C","ç":"c",
+  "Â":"A","â":"a","Î":"I","î":"i","Û":"U","û":"u"
 };
 
-/* =========================
-   Helpers: normalization, parsing
-========================= */
-function resolveUrl(rel){
-  return new URL(rel, window.location.href).toString();
+function foldTR(str){
+  const s = (str ?? "").toString().replace(/[İIıŞşĞğÜüÖöÇçÂâÎîÛû]/g, ch => TR_CHARMAP[ch] || ch);
+  // remove remaining diacritics
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-function asciiFold(s){
-  s = (s ?? "").toString().trim();
-  // force dotted/dotless i to normalize well
-  s = s.replace(/ı/g, "i").replace(/İ/g, "I");
-  // strip diacritics
-  s = s.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
-  return s;
-}
-
-function asciiName(s){
-  return asciiFold(s).replace(/[^A-Za-z0-9]+/g, " ").trim().replace(/\s+/g," ");
-}
-
-function keyify(s){
-  return asciiFold(s)
-    .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, " ")
+function keyify(str){
+  return foldTR(str)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
     .trim()
-    .replace(/\s+/g, " ");
+    .replace(/\s+/g, "-");
 }
 
-function uniqueKey(plate, distKey){
-  return `${plate}|${distKey}`;
+function cleanLabel(str){
+  return (str ?? "").toString().replace(/\s+/g, " ").trim();
 }
 
-function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+function provinceFileName(trName){
+  // "Şanlıurfa" -> "Sanliurfa"
+  const folded = foldTR(trName).toLowerCase().replace(/[^a-z0-9]/g,"");
+  return folded ? (folded[0].toUpperCase() + folded.slice(1)) : "Province";
+}
 
-function parseTRInt(x){
-  if (x == null) return null;
+/* ------------------------------ Number parsing --------------------------- */
+function parseTrNumber(x){
+  if (x === null || x === undefined) return null;
   let s = String(x).trim();
   if (!s) return null;
-  // remove spaces
-  s = s.replace(/\s+/g,"");
-  // thousands separators "." in TR
-  s = s.replace(/\./g,"");
-  // some sources might use commas
-  s = s.replace(/,/g,".");
-  // integer
+
+  // remove non-number except separators and signs
+  s = s.replace(/\s+/g,"").replace(/%/g,"");
+
+  // If both '.' and ',' exist, assume '.' thousands and ',' decimal -> normalize
+  if (s.includes(".") && s.includes(",")) {
+    s = s.replace(/\./g,"").replace(/,/g,".");
+  } else if (s.includes(".")) {
+    const parts = s.split(".");
+    if (parts.length > 2) {
+      s = parts.join("");
+    } else if (parts.length === 2) {
+      // if exactly 3 digits after dot => thousands
+      if (parts[1].length === 3) s = parts.join("");
+      // else decimal: keep
+    }
+  } else if (s.includes(",")) {
+    const parts = s.split(",");
+    if (parts.length === 2 && parts[1].length !== 3) {
+      s = parts.join(".");
+    } else {
+      s = parts.join("");
+    }
+  }
+
+  s = s.replace(/[^0-9.\-]/g,"");
   const n = Number(s);
-  return Number.isFinite(n) ? Math.round(n) : null;
+  return Number.isFinite(n) ? n : null;
 }
 
 function fmtInt(n){
-  if (n==null || !Number.isFinite(n)) return "—";
-  return n.toLocaleString("tr-TR");
+  if (!Number.isFinite(n)) return "—";
+  return Math.round(n).toLocaleString("tr-TR");
 }
 function fmtPct(x){
-  if (x==null || !Number.isFinite(x)) return "—";
-  return (x*100).toFixed(1).replace(".", ",") + "%";
+  if (!Number.isFinite(x)) return "—";
+  return (x*100).toFixed(2).replace(".", ",") + "%";
+}
+function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
+
+/* ------------------------------ Color helpers ---------------------------- */
+function hexToRgb(hex){
+  const h = hex.replace("#","").trim();
+  const full = (h.length===3) ? h.split("").map(c=>c+c).join("") : h;
+  const n = parseInt(full,16);
+  return {r:(n>>16)&255, g:(n>>8)&255, b:n&255};
+}
+function rgbToHex({r,g,b}){
+  const to = v => v.toString(16).padStart(2,"0");
+  return "#" + to(r) + to(g) + to(b);
+}
+function mix(hexA, hexB, t){
+  const a=hexToRgb(hexA), b=hexToRgb(hexB);
+  return rgbToHex({
+    r: Math.round(a.r + (b.r-a.r)*t),
+    g: Math.round(a.g + (b.g-a.g)*t),
+    b: Math.round(a.b + (b.b-a.b)*t),
+  });
+}
+function seqGreen(t){
+  // light green -> deep green
+  return mix("#dcfce7", "#166534", clamp(t,0,1));
+}
+function divRedWhiteGreen(t){
+  // t in [-1,1]
+  const x = clamp(t,-1,1);
+  if (x < 0) return mix("#b91c1c", "#f8fafc", (x+1));
+  return mix("#f8fafc", "#15803d", x);
 }
 
-/* =========================
-   Color utilities
-========================= */
-function hexToRgb(h){
-  const m = h.replace("#","").trim();
-  const v = m.length===3 ? m.split("").map(c=>c+c).join("") : m;
-  const n = parseInt(v,16);
-  return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
-}
-function rgbToHex(r,g,b){
-  const to = (x)=>x.toString(16).padStart(2,"0");
-  return "#"+to(r)+to(g)+to(b);
-}
-function mixHex(a,b,t){
-  const A=hexToRgb(a), B=hexToRgb(b);
-  const r=Math.round(A.r+(B.r-A.r)*t);
-  const g=Math.round(A.g+(B.g-A.g)*t);
-  const bb=Math.round(A.b+(B.b-A.b)*t);
-  return rgbToHex(r,g,bb);
+/* ------------------------------ Party colors ----------------------------- */
+const PARTY_COLORS = new Map([
+  ["chp", "#e11d48"],
+  ["ak-parti", "#f59e0b"],
+  ["mhp", "#b91c1c"],
+  ["iyi-parti", "#2563eb"],
+  ["dem-parti", "#7c3aed"],
+  ["yesil-sol-parti", "#16a34a"],
+  ["hdp", "#7c3aed"],
+  ["tip", "#6d28d9"],
+  ["zafer-partisi", "#0f172a"],
+  ["yeniden-refah", "#16a34a"],
+  ["saadet", "#0ea5e9"],
+  ["deva", "#3b82f6"],
+  ["gelecek", "#22c55e"],
+  ["bbp", "#ef4444"],
+  ["memleket", "#f97316"],
+  ["vatan-partisi", "#a16207"],
+  ["tkp", "#dc2626"],
+  ["sol-parti", "#ef4444"],
+  ["hkp", "#8b5cf6"],
+  ["gencleri", "#64748b"], // fallback-ish
+  ["gençparti", "#64748b"],
+  ["gencparti", "#64748b"],
+  ["millet", "#64748b"],
+  ["milli-yol", "#64748b"],
+  ["hak-par", "#64748b"],
+  ["anap", "#64748b"],
+  ["yp", "#64748b"],
+  ["ap", "#64748b"],
+  ["ab", "#64748b"],
+  ["gbp", "#64748b"]
+]);
+
+function partyColor(name){
+  const k = keyify(name);
+  return PARTY_COLORS.get(k) || "#64748b";
 }
 
-/* =========================
-   Party colors (punchy)
-========================= */
-const PARTY_COLORS = new Map(Object.entries({
-  "CHP":"#e11d48",
-  "AK PARTI":"#f59e0b",
-  "AK PARTİ":"#f59e0b",
-  "MHP":"#111827",
-  "İYİ PARTİ":"#2563eb",
-  "IYI PARTI":"#2563eb",
-  "YENIDEN REFAH":"#16a34a",
-  "YESIL SOL PARTI":"#10b981",
-  "YEŞİL SOL PARTİ":"#10b981",
-  "TIP":"#7c3aed",
-  "ZAFER PARTISI":"#0ea5e9",
-  "ZAFER PARTİSİ":"#0ea5e9",
-  "BBP":"#b45309",
-  "MEMLEKET":"#8b5cf6",
-  "SOL PARTI":"#be123c"
-}));
+/* ------------------------------ Layer config ----------------------------- */
+const LAYER_DEFS = [
+  { id:"election_winner", label:"Election: winner (margin shading)", kind:"election" },
 
-function colorForParty(p){
-  const k = keyify(p);
-  // normalize some common variants
-  const k2 = k.replace(/\s+/g," ").trim();
-  for (const [name,col] of PARTY_COLORS.entries()){
-    if (keyify(name) === k2) return col;
+  { id:"pop_total", label:"Population: total", kind:"seq" },
+  { id:"pop_change", label:"Population: change (abs)", kind:"div" },
+  { id:"pop_change_pct", label:"Population: change (%)", kind:"div" },
+
+  { id:"turnout", label:"Turnout (% cast / registered)", kind:"seq_turnout" },
+
+  { id:"age_u18_pct", label:"Age: 0–18 (%)", kind:"seq" },
+  { id:"age_u18_total", label:"Age: 0–18 (total)", kind:"seq" },
+  { id:"age_18p_pct", label:"Age: 18+ (%)", kind:"seq" },
+  { id:"age_18p_total", label:"Age: 18+ (total)", kind:"seq" },
+];
+
+/* ----------------------------- State containers -------------------------- */
+let map, base, geoLayer;
+let turkeyBounds = null;
+
+let activeLayerId = "election_winner";
+let activeYear = 2024;
+
+let hoverLayer = null;
+let selectedLayer = null;
+
+const popByKey = new Map();      // key => {2014,2019,2024, provinceTr, districtLabel}
+const electionByKey = new Map(); // key => {registered, cast, valid, votes:Map, winner, runnerUp, margin, ...}
+
+const featureByKey = new Map();  // key => layer
+
+/* ------------------------------- UI refs --------------------------------- */
+const elLayer = document.getElementById("layerSel");
+const elYear  = document.getElementById("yearSel");
+const elFit   = document.getElementById("fitBtn");
+const elHint  = document.getElementById("hintText");
+
+const elLegendDesc = document.getElementById("legendDesc");
+const elLegendBar  = document.getElementById("legendBar");
+const elLegMin     = document.getElementById("legMin");
+const elLegMax     = document.getElementById("legMax");
+
+const elDName = document.getElementById("dName");
+const elDSub  = document.getElementById("dSub");
+const elGrid  = document.getElementById("metricsGrid");
+const elBars  = document.getElementById("bars");
+const elENote = document.getElementById("eNote");
+const elClear = document.getElementById("clearBtn");
+
+/* ------------------------------- Init UI --------------------------------- */
+for (const def of LAYER_DEFS){
+  const opt = document.createElement("option");
+  opt.value = def.id;
+  opt.textContent = def.label;
+  if (def.id === activeLayerId) opt.selected = true;
+  elLayer.appendChild(opt);
+}
+
+elLayer.addEventListener("change", () => {
+  activeLayerId = elLayer.value;
+  refreshStyles();
+  refreshLegend();
+  refreshInfoPanel();
+});
+
+elYear.addEventListener("change", () => {
+  activeYear = Number(elYear.value);
+  refreshStyles();
+  refreshLegend();
+  refreshInfoPanel();
+});
+
+elFit.addEventListener("click", () => {
+  if (turkeyBounds) map.fitBounds(turkeyBounds, { padding:[18,18] });
+});
+
+elClear.addEventListener("click", () => {
+  if (selectedLayer){
+    unselect();
   }
-  // fallback deterministic by hash
-  let h=0; for (let i=0;i<k2.length;i++) h=(h*31+k2.charCodeAt(i))|0;
-  const hue = Math.abs(h)%360;
-  return `hsl(${hue} 82% 48%)`;
-}
+});
 
-/* =========================
-   District name matching (Merkez etc.)
-========================= */
-function uniq(arr){ return [...new Set(arr.filter(Boolean))]; }
+/* ------------------------------ Leaflet init ----------------------------- */
+map = L.map("map", {
+  zoomControl: true,
+  preferCanvas: true
+});
 
-function distKeyAlternatives(distName, provName){
-  const d0 = keyify(distName);
-  const p0 = keyify(provName);
-  const alts = [d0];
+base = L.tileLayer(
+  "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+  { attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 18 }
+).addTo(map);
 
-  if (d0 && p0 && d0 === p0) alts.push("MERKEZ");
+map.setView([39.0, 35.0], 6);
 
-  if (d0 && p0){
-    const removed = d0.replace(new RegExp(`\\b${p0}\\b`, "g"), "").replace(/\s+/g," ").trim();
-    if (removed) alts.push(removed);
-  }
-
-  for (const k of [...alts]){
-    alts.push(k.replace(/\b(ILCE|İLÇE)\b/g,"").replace(/\s+/g," ").trim());
-    alts.push(k.replace(/\bMERKEZ\b/g,"").replace(/\s+/g," ").trim());
-  }
-
-  return uniq(alts.map(x=>x && x.trim()).filter(Boolean));
-}
-
-function findElectionRow(plate, distName, provName, electionsMap){
-  for (const dk of distKeyAlternatives(distName, provName)){
-    const row = electionsMap.get(uniqueKey(plate, dk));
-    if (row) return row;
-  }
-  return null;
-}
-
-/* =========================
-   Load election JSON (robust filenames)
-========================= */
-function titleCaseSimple(s){
-  s = (s||"").trim();
-  if (!s) return s;
-  return s[0].toUpperCase() + s.slice(1);
-}
-
-async function tryFetchElectionJson(provName, plate){
-  const plate2 = String(plate).padStart(2,"0");
-  const ascii = asciiName(provName).replace(/\s+/g,"");
-
-  // prioritize GitHub-style "Istanbul.json" etc.
-  const candidates = [
-    `${titleCaseSimple(ascii)}.json`,
-    `${ascii}.json`,
-    `${provName}.json`,
-    `${provName.toLocaleLowerCase("tr-TR")}.json`,
-    `${ascii.toLowerCase()}.json`,
-    `${plate}.json`,
-    `${plate2}.json`
-  ];
-
-  const uniqList = [...new Set(candidates.filter(Boolean))];
-
-  for (const rel of uniqList){
-    try{
-      const url = resolveUrl(rel);
-      const resp = await fetch(url, { cache:"no-store" });
-      if (!resp.ok) continue;
-      return await resp.json();
-    }catch(_){}
-  }
-  return null;
-}
-
-function parseElectionJson(raw){
-  // raw: array of rows (with blank separators + "Oy Orani" rows)
-  const out = [];
-  if (!Array.isArray(raw)) return out;
-
-  const BASE = new Set([
-    "Ilce Id","Ilce Adi","Belde Adi",
-    "Kayitli Secmen Sayisi","Oy Kullanan Secmen Sayisi","Gecerli Oy Toplami"
+/* ------------------------------ Loading pipeline -------------------------- */
+(async function boot(){
+  await Promise.all([
+    loadPopulationCsv(),
+    loadElectionAllProvinces()
   ]);
+  await loadGeoJsonAndDraw();
+  refreshLegend();
+  refreshInfoPanel();
+})().catch(err => {
+  console.error(err);
+  elHint.textContent = "Load error. Check console + file names.";
+});
 
-  for (const r of raw){
-    const id = String(r?.["Ilce Id"] ?? "").trim();
-    if (!/^\d+$/.test(id)) continue;
+/* ------------------------------- Loaders --------------------------------- */
+async function loadPopulationCsv(){
+  const res = await fetch(FILE_POP_CSV);
+  if (!res.ok) throw new Error("Population CSV fetch failed: " + res.status);
+  const txt = await res.text();
+  const lines = txt.trim().split(/\r?\n/);
+  if (lines.length < 2) return;
 
-    const district = String(r["Ilce Adi"] ?? "").trim();
-    const reg = parseTRInt(r["Kayitli Secmen Sayisi"]);
-    const cast = parseTRInt(r["Oy Kullanan Secmen Sayisi"]);
-    const valid = parseTRInt(r["Gecerli Oy Toplami"]);
+  const header = lines[0].split(",").map(h=>h.trim());
+  const idx = {
+    province: header.indexOf("Province"),
+    district: header.indexOf("District"),
+    y2014: header.indexOf("2014"),
+    y2019: header.indexOf("2019"),
+    y2024: header.indexOf("2024")
+  };
 
-    const votes = {};
-    for (const k of Object.keys(r)){
-      if (BASE.has(k)) continue;
-      const name = String(k ?? "").trim();
-      if (!name) continue;
-      const v = parseTRInt(r[k]);
-      if (v==null) continue;
-      votes[name.replace(/\s+/g," ").trim()] = v;
-    }
-
-    // winner/runnerup
-    const entries = Object.entries(votes).sort((a,b)=>b[1]-a[1]);
-    const w = entries[0] ? { party: entries[0][0], votes: entries[0][1] } : null;
-    const ru = entries[1] ? { party: entries[1][0], votes: entries[1][1] } : null;
-
-    const marginVotes = (w && ru) ? (w.votes - ru.votes) : null;
-    const marginShare = (marginVotes!=null && valid && valid>0) ? (marginVotes/valid) : null;
-
-    out.push({
-      district,
-      districtKey: keyify(district),
-      districtId: Number(id),
-      registered: reg,
-      cast,
-      valid,
-      votes,
-      winner: w?.party ?? null,
-      winnerVotes: w?.votes ?? null,
-      runnerup: ru?.party ?? null,
-      runnerupVotes: ru?.votes ?? null,
-      marginVotes,
-      marginShare,
-      top: entries.slice(0,6)
-    });
+  // build province-name -> plate by folding Turkish names + common ascii
+  const provinceToPlate = new Map();
+  for (const [plateStr, trName] of Object.entries(PLATE_TO_PROVINCE_TR)){
+    const plate = Number(plateStr);
+    provinceToPlate.set(keyify(trName), plate);
+    provinceToPlate.set(keyify(foldTR(trName)), plate);
+    // also store derived filename stem (often matches csv)
+    provinceToPlate.set(keyify(provinceFileName(trName)), plate);
   }
-  return out;
-}
+  // add special common spellings
+  provinceToPlate.set(keyify("Sanliurfa"), 63);
+  provinceToPlate.set(keyify("Kahramanmaras"), 46);
+  provinceToPlate.set(keyify("Igdir"), 76);
+  provinceToPlate.set(keyify("Kirikkale"), 71);
+  provinceToPlate.set(keyify("Kirsehir"), 40);
+  provinceToPlate.set(keyify("Kastamonu"), 37);
 
-/* =========================
-   Load population CSV
-========================= */
-function parseCSV(text){
-  // minimal robust CSV parser (handles quoted fields)
-  const rows = [];
-  let i=0, field="", row=[], inQ=false;
-  const pushField = ()=>{ row.push(field); field=""; };
-  const pushRow = ()=>{ rows.push(row); row=[]; };
-
-  while (i < text.length){
-    const c = text[i++];
-    if (inQ){
-      if (c === '"'){
-        if (text[i] === '"'){ field += '"'; i++; }
-        else inQ=false;
-      } else field += c;
-    } else {
-      if (c === '"') inQ=true;
-      else if (c === ',') pushField();
-      else if (c === '\n'){
-        pushField(); pushRow();
-      } else if (c === '\r') {
-        // ignore
-      } else field += c;
-    }
-  }
-  // last
-  if (field.length || row.length){ pushField(); pushRow(); }
-  return rows;
-}
-
-function buildPopIndex(csvText){
-  const rows = parseCSV(csvText);
-  if (!rows.length) return;
-
-  const header = rows[0].map(h=>h.trim());
-  const idxProv = header.indexOf("Province");
-  const idxDist = header.indexOf("District");
-  const idx2014 = header.indexOf("2014");
-  const idx2019 = header.indexOf("2019");
-  const idx2024 = header.indexOf("2024");
-
-  for (let r=1; r<rows.length; r++){
-    const row = rows[r];
-    const prov = (row[idxProv] ?? "").trim();
-    const dist = (row[idxDist] ?? "").trim();
+  for (let i=1;i<lines.length;i++){
+    const row = lines[i].split(",");
+    const prov = row[idx.province]?.trim();
+    const dist = row[idx.district]?.trim();
     if (!prov || !dist) continue;
 
     const plate = provinceToPlate.get(keyify(prov));
     if (!plate) continue;
 
-    const dk = keyify(dist);
+    const key = plate + ":" + keyify(dist);
+    const y2014 = Number(row[idx.y2014]);
+    const y2019 = Number(row[idx.y2019]);
+    const y2024 = Number(row[idx.y2024]);
 
-    const p2014 = Number(row[idx2014]);
-    const p2019 = Number(row[idx2019]);
-    const p2024 = Number(row[idx2024]);
-
-    state.popIndex.set(uniqueKey(plate, dk), {
-      y2014: Number.isFinite(p2014) ? p2014 : null,
-      y2019: Number.isFinite(p2019) ? p2019 : null,
-      y2024: Number.isFinite(p2024) ? p2024 : null
+    popByKey.set(key, {
+      province: prov,
+      district: dist,
+      2014: Number.isFinite(y2014) ? y2014 : null,
+      2019: Number.isFinite(y2019) ? y2019 : null,
+      2024: Number.isFinite(y2024) ? y2024 : null
     });
   }
 }
 
-/* =========================
-   Compute per-feature joined metrics
-========================= */
-function attachDerived(f){
-  const p = f.properties;
-
-  // population
-  const pop = state.popIndex.get(uniqueKey(p.__plate, p.__districtKey)) || null;
-  p.__pop2014 = pop?.y2014 ?? null;
-  p.__pop2019 = pop?.y2019 ?? null;
-  p.__pop2024 = pop?.y2024 ?? null;
-
-  // election
-  let e = state.electIndex.get(uniqueKey(p.__plate, p.__districtKey)) || null;
-  if (!e) e = findElectionRow(p.__plate, p.__distName, p.__provName, state.electIndex);
-  p.__e = e;
-
-  const pop2024 = p.__pop2024;
-  const reg = e?.registered ?? null;
-  const cast = e?.cast ?? null;
-  const valid = e?.valid ?? null;
-
-  p.__turnout = (reg && cast && reg>0) ? (cast/reg) : null;
-
-  // age: per your spec: use 2024 population and registered voters as 18+
-  if (pop2024 != null && reg != null && pop2024 > 0){
-    const u18 = Math.max(0, pop2024 - reg);
-    p.__u18Tot = u18;
-    p.__u18Pct = u18 / pop2024;
-
-    p.__a18Tot = reg;
-    p.__a18Pct = reg / pop2024;
-  } else {
-    p.__u18Tot = p.__u18Pct = p.__a18Tot = p.__a18Pct = null;
-  }
-
-  p.__valid = valid;
-}
-
-/* =========================
-   Scales for legends/colors
-========================= */
-function computeScales(){
-  const feats = state.features;
-
-  function vals(fn){
-    const a = [];
-    for (const f of feats){
-      const v = fn(f.properties);
-      if (v!=null && Number.isFinite(v)) a.push(v);
+async function loadElectionAllProvinces(){
+  // Try loading Province.json for all 81 provinces; ignore missing ones.
+  // This is the only way on GitHub Pages (no directory listing).
+  const tasks = PROVINCE_FILES.map(async p => {
+    try{
+      const res = await fetch(p.file, { cache:"no-store" });
+      if (!res.ok) return null;
+      const json = await res.json();
+      parseProvinceElectionJson(p.plate, json);
+      return p.plate;
+    }catch(e){
+      return null;
     }
-    return a;
-  }
-
-  // population (by year)
-  state.scales.pop = {
-    y2014: extent(vals(p=>p.__pop2014)),
-    y2019: extent(vals(p=>p.__pop2019)),
-    y2024: extent(vals(p=>p.__pop2024))
-  };
-
-  // change depends on selected year (computed on the fly, but we precompute maxAbs)
-  state.scales.popchg = {
-    prev2019: maxAbs(vals(p=>{
-      if (p.__pop2019==null || p.__pop2014==null) return null;
-      return p.__pop2019 - p.__pop2014;
-    })),
-    prev2024: maxAbs(vals(p=>{
-      if (p.__pop2024==null || p.__pop2019==null) return null;
-      return p.__pop2024 - p.__pop2019;
-    }))
-  };
-
-  state.scales.popchgpct = {
-    prev2019: maxAbs(vals(p=>{
-      if (p.__pop2019==null || p.__pop2014==null || p.__pop2014===0) return null;
-      return (p.__pop2019 - p.__pop2014)/p.__pop2014;
-    })),
-    prev2024: maxAbs(vals(p=>{
-      if (p.__pop2024==null || p.__pop2019==null || p.__pop2019===0) return null;
-      return (p.__pop2024 - p.__pop2019)/p.__pop2019;
-    }))
-  };
-
-  // turnout
-  state.scales.turnout = extent(vals(p=>p.__turnout));
-
-  // age maps
-  state.scales.u18pct = extent(vals(p=>p.__u18Pct));
-  state.scales.u18tot = extent(vals(p=>p.__u18Tot));
-  state.scales.a18pct = extent(vals(p=>p.__a18Pct));
-  state.scales.a18tot = extent(vals(p=>p.__a18Tot));
-}
-
-function extent(arr){
-  if (!arr.length) return [0,1];
-  let mn=Infinity, mx=-Infinity;
-  for (const v of arr){ if (v<mn) mn=v; if (v>mx) mx=v; }
-  if (mn===mx){ mx = mn+1; }
-  return [mn,mx];
-}
-function maxAbs(arr){
-  let m=0;
-  for (const v of arr){ m = Math.max(m, Math.abs(v)); }
-  if (m===0) m=1;
-  return m;
-}
-
-/* =========================
-   Color ramps (light mode)
-========================= */
-const GREEN_L = "#e8f5e9";
-const GREEN_D = "#1b5e20";
-
-const RED_L   = "#fee2e2";
-const RED_D   = "#dc2626";
-
-const TURN_L  = "#e0f2fe";
-const TURN_D  = "#0369a1";
-
-const U18_L   = "#f3e8ff";
-const U18_D   = "#6d28d9";
-
-const A18_L   = "#ecfeff";
-const A18_D   = "#0f766e";
-
-function seqColor(t, a, b){
-  t = clamp01(Math.pow(t, 0.85));
-  return mixHex(a,b,t);
-}
-
-function divergeColor(v, maxAbsVal){
-  if (v==null || !Number.isFinite(v)) return "#eef2f7";
-  const m = Math.max(1e-12, maxAbsVal);
-  const t = clamp01(Math.abs(v)/m);
-  if (v < 0) return mixHex("#ffffff", RED_D, Math.pow(t, 0.70));
-  if (v > 0) return mixHex("#ffffff", GREEN_D, Math.pow(t, 0.70));
-  return "#ffffff";
-}
-
-/* Election: margin smaller -> lighter */
-function electionColor(e){
-  if (!e || !e.winner) return "#eef2f7";
-  const base = colorForParty(e.winner);
-  const ms = (e.marginShare!=null && Number.isFinite(e.marginShare)) ? Math.max(0, Math.min(0.30, e.marginShare)) : 0;
-  let t = clamp01(ms / 0.18);
-  t = Math.pow(t, 0.55);
-
-  // keep low-margin still clearly colored
-  const low  = mixHex("#ffffff", base, 0.62);
-  const high = mixHex("#000000", base, 0.12);
-  return mixHex(low, high, t);
-}
-
-/* =========================
-   Map init
-========================= */
-const map = L.map("map", { preferCanvas:true, zoomControl:false });
-L.control.zoom({ position:"topleft" }).addTo(map);
-
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 18,
-  attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
-
-let geoLayer = null;
-
-function baseStyle(feature){
-  const p = feature.properties;
-  const fill = colorForFeature(p);
-
-  return {
-    weight: 0.8,
-    opacity: 1,
-    color: "rgba(107,122,146,0.75)",
-    fillOpacity: 0.92,
-    fillColor: fill
-  };
-}
-
-function hoverStyle(layer){
-  layer.setStyle({
-    weight: 2.0,
-    color: "#111827",
-    opacity: 1
   });
-  try{ layer.bringToFront(); }catch(_){}
+  await Promise.all(tasks);
 }
 
-function unhoverStyle(layer){
-  if (!layer) return;
-  if (state.selected === layer) return; // selected keeps its style
-  layer.setStyle(baseStyle(layer.feature));
-}
-
-function selectStyle(layer){
-  layer.setStyle({
-    weight: 2.6,
-    color: "#111827",
-    opacity: 1,
-    fillOpacity: 0.95
-  });
-  try{ layer.bringToFront(); }catch(_){}
-}
-
-function clearSelection(){
-  if (state.selected){
-    state.selected.setStyle(baseStyle(state.selected.feature));
-    state.selected = null;
+function getField(row, names){
+  for (const n of names){
+    if (row && Object.prototype.hasOwnProperty.call(row, n)) return row[n];
   }
-  renderDistrict(null, false);
+  return undefined;
 }
 
-function onEachFeature(feature, layer){
-  layer.on("mouseover", (ev)=>{
-    state.hovered = layer;
-    hoverStyle(layer);
-    renderDistrict(layer.feature, state.selected === layer);
-    tipShow(ev.originalEvent, layer.feature);
-  });
-  layer.on("mousemove", (ev)=>{
-    tipMove(ev.originalEvent);
-  });
-  layer.on("mouseout", ()=>{
-    tipHide();
-    unhoverStyle(layer);
-    state.hovered = null;
-    if (!state.selected) renderDistrict(null,false);
-    else renderDistrict(state.selected.feature, true);
-  });
-  layer.on("click", ()=>{
-    if (state.selected === layer){
-      // unselect
-      layer.setStyle(baseStyle(layer.feature));
-      state.selected = null;
-      renderDistrict(null,false);
-      return;
+function parseProvinceElectionJson(plate, json){
+  // json is an array of objects
+  if (!Array.isArray(json)) return;
+
+  for (const row of json){
+    const ilceId = getField(row, ["Ilce Id","İlçe Id","IlceId","İlçeId","İlce Id ","İlçe Id "]);
+    const ilceAdi = getField(row, ["Ilce Adi","İlçe Adı","Ilce Adı","İlçe Adi","IlceAdi","İlçeAdı","İlçe Adi","Ilce Adi "]);
+
+    const idStr = cleanLabel(ilceId);
+    const nameStr = cleanLabel(ilceAdi);
+
+    if (!nameStr) continue;
+    if (!idStr || keyify(idStr) === "oy-orani") continue; // skip percent rows
+    if (!/^\d+$/.test(foldTR(idStr).replace(/\D/g,"")) && idStr.length > 0) {
+      // Some files use non-numeric for percent/meta. If it isn’t numeric, skip.
+      if (!/^\d+$/.test(idStr.trim())) continue;
     }
-    if (state.selected){
-      state.selected.setStyle(baseStyle(state.selected.feature));
+
+    // core fields (registered/cast/valid)
+    const registered = parseTrNumber(getField(row, ["Kayitli Secmen Sayisi","Kayıtlı Seçmen Sayısı","KayitliSecmenSayisi","KayıtlıSeçmenSayısı"]));
+    const cast      = parseTrNumber(getField(row, ["Oy Kullanan Secmen Sayisi","Oy Kullanan Seçmen Sayısı","OyKullananSecmenSayisi"]));
+    const valid     = parseTrNumber(getField(row, ["Gecerli Oy Toplami","Geçerli Oy Toplamı","GecerliOyToplami"]));
+
+    const votes = new Map();
+    const skipKeys = new Set([
+      "Ilce Id","İlçe Id","Ilce Adi","İlçe Adı","Ilce Adı","İlçe Adi","Belde Adi","Belde Adı",
+      "Kayitli Secmen Sayisi","Kayıtlı Seçmen Sayısı",
+      "Oy Kullanan Secmen Sayisi","Oy Kullanan Seçmen Sayısı",
+      "Gecerli Oy Toplami","Geçerli Oy Toplamı"
+    ]);
+
+    // collect vote-like fields: anything numeric-ish that isn’t one of the metadata fields
+    for (const [k,v] of Object.entries(row)){
+      if (skipKeys.has(k)) continue;
+      const kk = cleanLabel(k);
+      if (!kk) continue;
+
+      // also skip obvious empty header row fields
+      if (keyify(kk) === "oy-orani") continue;
+
+      const n = parseTrNumber(v);
+      if (!Number.isFinite(n) || n <= 0) continue;
+
+      votes.set(kk, n);
     }
-    state.selected = layer;
-    selectStyle(layer);
-    renderDistrict(layer.feature, true);
-  });
-}
 
-/* =========================
-   Layer value + styling
-========================= */
-function yearPop(p){
-  if (state.year === 2014) return p.__pop2014;
-  if (state.year === 2019) return p.__pop2019;
-  return p.__pop2024;
-}
+    // Determine winner & margin using vote totals (not percent rows)
+    const sorted = [...votes.entries()].sort((a,b)=>b[1]-a[1]);
+    const winner = sorted[0]?.[0] ?? null;
+    const winnerVotes = sorted[0]?.[1] ?? null;
+    const runnerUp = sorted[1]?.[0] ?? null;
+    const runnerUpVotes = sorted[1]?.[1] ?? null;
 
-function popChange(p){
-  if (state.year === 2019){
-    if (p.__pop2019==null || p.__pop2014==null) return null;
-    return p.__pop2019 - p.__pop2014;
-  }
-  if (state.year === 2024){
-    if (p.__pop2024==null || p.__pop2019==null) return null;
-    return p.__pop2024 - p.__pop2019;
-  }
-  return null;
-}
+    const denom = Number.isFinite(valid) && valid>0 ? valid : (sorted.reduce((s,[_p,val])=>s+val,0) || null);
+    const margin = (Number.isFinite(winnerVotes) && Number.isFinite(runnerUpVotes) && Number.isFinite(denom) && denom>0)
+      ? (winnerVotes-runnerUpVotes)/denom
+      : null;
 
-function popChangePct(p){
-  if (state.year === 2019){
-    if (p.__pop2019==null || p.__pop2014==null || p.__pop2014===0) return null;
-    return (p.__pop2019 - p.__pop2014)/p.__pop2014;
-  }
-  if (state.year === 2024){
-    if (p.__pop2024==null || p.__pop2019==null || p.__pop2019===0) return null;
-    return (p.__pop2024 - p.__pop2019)/p.__pop2019;
-  }
-  return null;
-}
+    const districtKey = keyify(nameStr);
+    const key = plate + ":" + districtKey;
 
-function colorForFeature(p){
-  switch (state.layer){
-    case "pop":{
-      const v = yearPop(p);
-      const sc = state.scales.pop["y"+state.year] || [0,1];
-      const t = (v==null) ? null : (v - sc[0])/(sc[1]-sc[0]);
-      return (t==null || !Number.isFinite(t)) ? "#eef2f7" : seqColor(t, GREEN_L, GREEN_D);
-    }
-    case "popchg":{
-      const v = popChange(p);
-      const m = (state.year===2019) ? state.scales.popchg.prev2019 : state.scales.popchg.prev2024;
-      return divergeColor(v, m);
-    }
-    case "popchgpct":{
-      const v = popChangePct(p);
-      const m = (state.year===2019) ? state.scales.popchgpct.prev2019 : state.scales.popchgpct.prev2024;
-      return divergeColor(v, m);
-    }
-    case "e_win":{
-      return electionColor(p.__e);
-    }
-    case "turnout":{
-      const v = p.__turnout;
-      const sc = state.scales.turnout || [0,1];
-      const t = (v==null) ? null : (v - sc[0])/(sc[1]-sc[0]);
-      return (t==null || !Number.isFinite(t)) ? "#eef2f7" : seqColor(t, TURN_L, TURN_D);
-    }
-    case "u18pct":{
-      const v = p.__u18Pct;
-      const sc = state.scales.u18pct || [0,1];
-      const t = (v==null) ? null : (v - sc[0])/(sc[1]-sc[0]);
-      return (t==null || !Number.isFinite(t)) ? "#eef2f7" : seqColor(t, U18_L, U18_D);
-    }
-    case "u18tot":{
-      const v = p.__u18Tot;
-      const sc = state.scales.u18tot || [0,1];
-      const t = (v==null) ? null : (v - sc[0])/(sc[1]-sc[0]);
-      return (t==null || !Number.isFinite(t)) ? "#eef2f7" : seqColor(t, U18_L, U18_D);
-    }
-    case "a18pct":{
-      const v = p.__a18Pct;
-      const sc = state.scales.a18pct || [0,1];
-      const t = (v==null) ? null : (v - sc[0])/(sc[1]-sc[0]);
-      return (t==null || !Number.isFinite(t)) ? "#eef2f7" : seqColor(t, A18_L, A18_D);
-    }
-    case "a18tot":{
-      const v = p.__a18Tot;
-      const sc = state.scales.a18tot || [0,1];
-      const t = (v==null) ? null : (v - sc[0])/(sc[1]-sc[0]);
-      return (t==null || !Number.isFinite(t)) ? "#eef2f7" : seqColor(t, A18_L, A18_D);
-    }
-    default:
-      return "#eef2f7";
+    electionByKey.set(key, {
+      plate,
+      districtNameRaw: nameStr,
+      registered: Number.isFinite(registered) ? registered : null,
+      cast: Number.isFinite(cast) ? cast : null,
+      valid: Number.isFinite(valid) ? valid : null,
+      denom: Number.isFinite(denom) ? denom : null,
+      votes,
+      winner,
+      runnerUp,
+      margin
+    });
   }
 }
 
-/* =========================
-   Legend rendering
-========================= */
-function setLegend(){
-  const layer = LAYERS.find(x=>x.id===state.layer);
-  document.getElementById("legendTitle").textContent = layer?.legend ?? "Legend";
+async function loadGeoJsonAndDraw(){
+  const res = await fetch(FILE_GEOJSON);
+  if (!res.ok) throw new Error("GeoJSON fetch failed: " + res.status);
+  const gj = await res.json();
 
-  const bar = document.getElementById("legendBar");
-  const labels = document.getElementById("legendLabels");
-  const swatches = document.getElementById("partySwatches");
-
-  swatches.style.display = "none";
-  swatches.innerHTML = "";
-
-  if (state.layer === "pop"){
-    bar.style.background = `linear-gradient(90deg, ${GREEN_L}, ${GREEN_D})`;
-    const [mn,mx] = state.scales.pop["y"+state.year] || [0,1];
-    labels.innerHTML = `<span>${fmtInt(Math.round(mn))}</span><span>${fmtInt(Math.round(mx))}</span>`;
-    return;
-  }
-  if (state.layer === "popchg"){
-    bar.style.background = `linear-gradient(90deg, ${RED_D}, #ffffff, ${GREEN_D})`;
-    const m = (state.year===2019) ? state.scales.popchg.prev2019 : state.scales.popchg.prev2024;
-    labels.innerHTML = `<span>${fmtInt(-Math.round(m))}</span><span>${fmtInt(Math.round(m))}</span>`;
-    return;
-  }
-  if (state.layer === "popchgpct"){
-    bar.style.background = `linear-gradient(90deg, ${RED_D}, #ffffff, ${GREEN_D})`;
-    const m = (state.year===2019) ? state.scales.popchgpct.prev2019 : state.scales.popchgpct.prev2024;
-    labels.innerHTML = `<span>${( (-m)*100 ).toFixed(1).replace(".",",")}%</span><span>${( (m)*100 ).toFixed(1).replace(".",",")}%</span>`;
-    return;
-  }
-  if (state.layer === "turnout"){
-    bar.style.background = `linear-gradient(90deg, ${TURN_L}, ${TURN_D})`;
-    const [mn,mx] = state.scales.turnout || [0,1];
-    labels.innerHTML = `<span>${fmtPct(mn)}</span><span>${fmtPct(mx)}</span>`;
-    return;
-  }
-  if (state.layer === "u18pct"){
-    bar.style.background = `linear-gradient(90deg, ${U18_L}, ${U18_D})`;
-    const [mn,mx] = state.scales.u18pct || [0,1];
-    labels.innerHTML = `<span>${fmtPct(mn)}</span><span>${fmtPct(mx)}</span>`;
-    return;
-  }
-  if (state.layer === "u18tot"){
-    bar.style.background = `linear-gradient(90deg, ${U18_L}, ${U18_D})`;
-    const [mn,mx] = state.scales.u18tot || [0,1];
-    labels.innerHTML = `<span>${fmtInt(Math.round(mn))}</span><span>${fmtInt(Math.round(mx))}</span>`;
-    return;
-  }
-  if (state.layer === "a18pct"){
-    bar.style.background = `linear-gradient(90deg, ${A18_L}, ${A18_D})`;
-    const [mn,mx] = state.scales.a18pct || [0,1];
-    labels.innerHTML = `<span>${fmtPct(mn)}</span><span>${fmtPct(mx)}</span>`;
-    return;
-  }
-  if (state.layer === "a18tot"){
-    bar.style.background = `linear-gradient(90deg, ${A18_L}, ${A18_D})`;
-    const [mn,mx] = state.scales.a18tot || [0,1];
-    labels.innerHTML = `<span>${fmtInt(Math.round(mn))}</span><span>${fmtInt(Math.round(mx))}</span>`;
-    return;
-  }
-
-  if (state.layer === "e_win"){
-    // categorical legend: show top parties observed
-    bar.style.background = "#eef2f7";
-    labels.innerHTML = `<span>low margin → lighter</span><span>high margin → darker</span>`;
-
-    const top = [...state.partyUniverse.entries()]
-      .sort((a,b)=>b[1]-a[1])
-      .slice(0,14)
-      .map(([p])=>p);
-
-    swatches.style.display = "block";
-    for (const p of top){
-      const row = document.createElement("div");
-      row.className = "swatch";
-      row.innerHTML = `
-        <div class="swatchLeft">
-          <div class="chip" style="background:${colorForParty(p)}"></div>
-          <div class="swatchName">${p}</div>
-        </div>
-      `;
-      swatches.appendChild(row);
-    }
-    return;
-  }
-
-  bar.style.background = "#eef2f7";
-  labels.innerHTML = `<span>—</span><span>—</span>`;
-}
-
-/* =========================
-   District info rendering
-========================= */
-function renderDistrict(feature, pinned){
-  const elName = document.getElementById("dName");
-  const elSub  = document.getElementById("dSub");
-  const elBadge= document.getElementById("dBadge");
-
-  if (!feature){
-    elName.textContent = "Hover or click a district";
-    elSub.textContent  = "Selection will pin details.";
-    elBadge.textContent= "—";
-    setValsNull();
-    document.getElementById("winLine").textContent = "—";
-    document.getElementById("topBars").innerHTML = "";
-    return;
-  }
-
-  const p = feature.properties;
-  const name = p.__distName;
-  const prov = p.__provName;
-  const plate= p.__plate;
-
-  elName.textContent = name;
-  elSub.textContent = pinned ? "Pinned (click again to unselect)." : `${prov} • hover for preview`;
-  elBadge.textContent = `${prov} • ${String(plate).padStart(2,"0")}`;
-
-  // population
-  const popY = yearPop(p);
-  const pop24 = p.__pop2024;
-  const chg = popChange(p);
-  const chgPct = popChangePct(p);
-
-  document.getElementById("popYear").textContent = popY!=null ? fmtInt(popY) : "—";
-  document.getElementById("pop2024").textContent = pop24!=null ? fmtInt(pop24) : "—";
-  document.getElementById("popChg").textContent  = chg!=null ? (chg>=0?"+":"") + fmtInt(chg) : "—";
-  document.getElementById("popChgPct").textContent = chgPct!=null ? ((chgPct>=0?"+":"") + (chgPct*100).toFixed(1).replace(".",",") + "%") : "—";
-
-  const e = p.__e;
-  document.getElementById("reg18").textContent = e?.registered!=null ? fmtInt(e.registered) : "—";
-  document.getElementById("cast").textContent  = e?.cast!=null ? fmtInt(e.cast) : "—";
-  document.getElementById("valid").textContent = e?.valid!=null ? fmtInt(e.valid) : "—";
-  document.getElementById("turnout").textContent = p.__turnout!=null ? fmtPct(p.__turnout) : "—";
-
-  document.getElementById("u18Total").textContent = p.__u18Tot!=null ? fmtInt(p.__u18Tot) : "—";
-  document.getElementById("u18Pct").textContent   = p.__u18Pct!=null ? fmtPct(p.__u18Pct) : "—";
-  document.getElementById("a18Total").textContent = p.__a18Tot!=null ? fmtInt(p.__a18Tot) : "—";
-  document.getElementById("a18Pct").textContent   = p.__a18Pct!=null ? fmtPct(p.__a18Pct) : "—";
-
-  // election line + bars
-  const winLine = document.getElementById("winLine");
-  const bars = document.getElementById("topBars");
-
-  if (!e || !e.winner){
-    winLine.textContent = "No election data for this district (missing province JSON or join mismatch).";
-    bars.innerHTML = "";
-    return;
-  }
-
-  const marginPct = (e.marginShare!=null) ? (e.marginShare*100).toFixed(1).replace(".",",")+"%" : "—";
-  winLine.innerHTML = `<b>${e.winner}</b> leads <span class="tmuted">(margin ${marginPct})</span>`;
-
-  const top = e.top || [];
-  const maxV = top.length ? top[0][1] : 1;
-
-  bars.innerHTML = "";
-  for (const [party, votes] of top){
-    const row = document.createElement("div");
-    row.className = "barRow";
-    const w = Math.max(1, Math.round((votes/maxV)*100));
-    const col = colorForParty(party);
-
-    row.innerHTML = `
-      <div class="barName">${party}</div>
-      <div class="bar"><div class="barFill" style="width:${w}%; background:${col};"></div></div>
-      <div class="barVal">${fmtInt(votes)}</div>
-    `;
-    bars.appendChild(row);
-  }
-}
-
-function setValsNull(){
-  const ids = ["popYear","pop2024","popChg","popChgPct","reg18","cast","valid","turnout","u18Total","u18Pct","a18Total","a18Pct"];
-  for (const id of ids) document.getElementById(id).textContent = "—";
-}
-
-/* =========================
-   Tooltip
-========================= */
-const tipEl = document.getElementById("tip");
-function tipShow(evt, feature){
-  if (!evt || !feature) return;
-  const p = feature.properties;
-  const e = p.__e;
-  const pop = yearPop(p);
-  const line1 = `<b>${p.__distName}</b> <span class="tmuted">(${p.__provName})</span>`;
-  let line2 = pop!=null ? `Pop: <b>${fmtInt(pop)}</b>` : `Pop: —`;
-
-  if (state.layer === "e_win" && e?.winner){
-    const m = e.marginShare!=null ? (e.marginShare*100).toFixed(1).replace(".",",")+"%" : "—";
-    line2 = `Winner: <b>${e.winner}</b> <span class="tmuted">margin ${m}</span>`;
-  } else if (state.layer === "turnout"){
-    line2 = `Turnout: <b>${p.__turnout!=null ? fmtPct(p.__turnout) : "—"}</b>`;
-  } else if (state.layer === "popchg"){
-    const v = popChange(p);
-    line2 = `Change: <b>${v!=null ? ((v>=0?"+":"")+fmtInt(v)) : "—"}</b>`;
-  } else if (state.layer === "popchgpct"){
-    const v = popChangePct(p);
-    line2 = `Change: <b>${v!=null ? ((v>=0?"+":"")+(v*100).toFixed(1).replace(".",",")+"%") : "—"}</b>`;
-  }
-
-  tipEl.innerHTML = `${line1}<div class="tmuted" style="margin-top:2px;">${line2}</div>`;
-  tipEl.style.opacity = "1";
-  tipMove(evt);
-}
-function tipMove(evt){
-  if (!evt) return;
-  const wrap = document.getElementById("mapWrap").getBoundingClientRect();
-  const x = evt.clientX - wrap.left;
-  const y = evt.clientY - wrap.top;
-  tipEl.style.left = x + "px";
-  tipEl.style.top  = y + "px";
-}
-function tipHide(){
-  tipEl.style.opacity = "0";
-}
-
-/* =========================
-   Render / update
-========================= */
-function refreshMapStyles(){
-  if (!geoLayer) return;
-  geoLayer.setStyle(baseStyle);
-  if (state.selected) selectStyle(state.selected);
-  setLegend();
-}
-
-function populateLayerSelect(){
-  const sel = document.getElementById("layerSel");
-  sel.innerHTML = "";
-  for (const l of LAYERS){
-    const opt = document.createElement("option");
-    opt.value = l.id;
-    opt.textContent = l.name;
-    sel.appendChild(opt);
-  }
-  sel.value = state.layer;
-}
-
-function noteLine(){
-  const tiny = document.getElementById("tinyNote");
-  if (["u18pct","u18tot","a18pct","a18tot","turnout","e_win"].includes(state.layer)){
-    tiny.textContent = "Age/turnout use 2024 population + 2024 registered voters.";
-  } else {
-    tiny.textContent = "";
-  }
-}
-
-/* =========================
-   Loading pipeline
-========================= */
-async function loadAll(){
-  document.getElementById("tinyNote").textContent = "Loading…";
-
-  // 1) load population CSV
-  const popText = await (await fetch(resolveUrl(FILE_POPCSV), {cache:"no-store"})).text();
-  buildPopIndex(popText);
-
-  // 2) load geojson
-  state.geojson = await (await fetch(resolveUrl(FILE_GEOJSON), {cache:"no-store"})).json();
-
-  // enrich geo features with plate/province keys
-  state.features = state.geojson.features;
-  for (const f of state.features){
-    const p = f.properties || (f.properties={});
-    const net = String(p.network ?? "");
-    const m = net.match(/TR(\d{2})/i);
-    const plate = m ? Number(m[1]) : null;
-    p.__plate = plate;
-    p.__provName = (plate && PLATE_TO_PROVINCE[plate]) ? PLATE_TO_PROVINCE[plate] : "Unknown";
-    p.__distName = String(p.name ?? "").trim();
-    p.__districtKey = keyify(p.__distName);
-  }
-
-  // 3) load elections (attempt all plates; only existing jsons will load)
-  //    (this is the piece that fixes your “only Edirne” / “election disappeared” problem)
-  await loadElectionsForAllPlates();
-
-  // 4) join derived values
-  for (const f of state.features) attachDerived(f);
-
-  // 5) scales
-  computeScales();
-
-  // 6) init layer
-  if (geoLayer) geoLayer.remove();
-  geoLayer = L.geoJSON(state.geojson, {
+  geoLayer = L.geoJSON(gj, {
+    // Remove the “map tacks”: your GeoJSON has Point features; we only want polygons.
+    filter: (feature) => {
+      const t = feature?.geometry?.type;
+      return t === "Polygon" || t === "MultiPolygon";
+    },
     style: baseStyle,
-    onEachFeature
+    onEachFeature: (feature, layer) => {
+      const key = featureKey(feature);
+      featureByKey.set(key, layer);
+
+      const title = displayDistrictTitle(feature);
+      layer.bindTooltip(title, { sticky:true, className:"district-tooltip" });
+
+      layer.on("mouseover", () => {
+        hoverLayer = layer;
+        if (hoverLayer !== selectedLayer){
+          hoverLayer.setStyle(hoverStyle());
+        }
+        // side panel shows hover ONLY if nothing is pinned
+        if (!selectedLayer) refreshInfoPanel(feature);
+      });
+
+      layer.on("mouseout", () => {
+        if (hoverLayer && hoverLayer !== selectedLayer){
+          geoLayer.resetStyle(hoverLayer);
+        }
+        hoverLayer = null;
+        if (!selectedLayer) refreshInfoPanel(null);
+      });
+
+      layer.on("click", () => {
+        if (selectedLayer === layer){
+          unselect();
+          return;
+        }
+        select(layer, feature);
+      });
+    }
   }).addTo(map);
 
-  // Fit Turkey
-  map.fitBounds(geoLayer.getBounds(), { padding:[20,20] });
-
-  // UI
-  populateLayerSelect();
-  setLegend();
-  noteLine();
-
-  document.getElementById("tinyNote").textContent = "";
+  turkeyBounds = geoLayer.getBounds();
+  map.fitBounds(turkeyBounds, { padding:[18,18] });
 }
 
-async function loadElectionsForAllPlates(){
-  // limited concurrency so GitHub Pages doesn’t get hammered
-  const plates = [];
-  for (let plate=1; plate<=81; plate++) plates.push(plate);
+/* ------------------------------ Keys / display --------------------------- */
+function featurePlate(feature){
+  const net = feature?.properties?.network || "";
+  const m = String(net).match(/TR(\d+)/i);
+  return m ? Number(m[1]) : null;
+}
+function featureKey(feature){
+  const plate = featurePlate(feature);
+  const dist = feature?.properties?.name || "";
+  return (plate ?? "null") + ":" + keyify(dist);
+}
+function provinceNameFromPlate(plate){
+  return PLATE_TO_PROVINCE_TR[plate] || ("Plate " + plate);
+}
 
-  const concurrency = 6;
-  let idx = 0;
+function displayDistrictTitle(feature){
+  const plate = featurePlate(feature);
+  const prov = plate ? provinceNameFromPlate(plate) : "Unknown";
+  const dist = feature?.properties?.name || "—";
+  return `<span>${dist}</span><span class="t2">${prov} • ${plate ?? "—"}</span>`;
+}
 
-  async function worker(){
-    while (idx < plates.length){
-      const plate = plates[idx++];
-      const prov = PLATE_TO_PROVINCE[plate];
-      if (!prov) continue;
+/* ------------------------------ Layer values ----------------------------- */
+function prevYear(y){
+  if (y === 2024) return 2019;
+  if (y === 2019) return 2014;
+  return null;
+}
 
-      const json = await tryFetchElectionJson(prov, plate);
-      if (!json) continue;
+function dataForFeature(feature){
+  const key = featureKey(feature);
+  const pop = popByKey.get(key) || null;
+  const elec = electionByKey.get(key) || null;
+  const plate = featurePlate(feature);
+  return { key, plate, pop, elec, feature };
+}
 
-      const rows = parseElectionJson(json);
+function valueForLayer(d){
+  const def = LAYER_DEFS.find(x=>x.id===activeLayerId);
+  if (!def) return null;
 
-      for (const r of rows){
-        // store primary key
-        state.electIndex.set(uniqueKey(plate, r.districtKey), r);
+  if (def.kind === "election"){
+    // election is categorical
+    return null;
+  }
 
-        // store helpful aliases
-        const dk = r.districtKey;
-        const pk = keyify(prov);
+  // population
+  if (activeLayerId === "pop_total"){
+    return d.pop ? d.pop[String(activeYear)] : null;
+  }
+  if (activeLayerId === "pop_change"){
+    const py = prevYear(activeYear);
+    if (!d.pop || !py) return null;
+    const a = d.pop[String(activeYear)];
+    const b = d.pop[String(py)];
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+    return a - b;
+  }
+  if (activeLayerId === "pop_change_pct"){
+    const py = prevYear(activeYear);
+    if (!d.pop || !py) return null;
+    const a = d.pop[String(activeYear)];
+    const b = d.pop[String(py)];
+    if (!Number.isFinite(a) || !Number.isFinite(b) || b === 0) return null;
+    return (a - b) / b; // ratio
+  }
 
-        // "EDIRNE MERKEZ" -> also store "MERKEZ"
-        if (dk.includes("MERKEZ")) state.electIndex.set(uniqueKey(plate, "MERKEZ"), r);
+  // turnout & age use election registered/cast and 2024 pop
+  if (activeLayerId === "turnout"){
+    const reg = d.elec?.registered;
+    const cast = d.elec?.cast;
+    if (!Number.isFinite(reg) || !Number.isFinite(cast) || reg <= 0) return null;
+    return cast / reg; // ratio
+  }
 
-        // if district key starts with province name, store removed variant
-        if (pk && dk.startsWith(pk+" ")){
-          const removed = dk.replace(new RegExp(`^${pk}\\s+`), "").trim();
-          if (removed) state.electIndex.set(uniqueKey(plate, removed), r);
-        }
+  const pop2024 = d.pop ? d.pop["2024"] : null;
+  const reg = d.elec?.registered;
 
-        // collect parties for legend
-        if (r.winner){
-          const w = r.winner.replace(/\s+/g," ").trim();
-          state.partyUniverse.set(w, (state.partyUniverse.get(w)||0)+1);
-        }
+  if (!Number.isFinite(pop2024) || pop2024 <= 0 || !Number.isFinite(reg) || reg < 0) return null;
+
+  const u18 = clamp(pop2024 - reg, 0, pop2024);
+  const p18 = clamp(reg, 0, pop2024);
+
+  if (activeLayerId === "age_u18_pct") return u18 / pop2024;
+  if (activeLayerId === "age_u18_total") return u18;
+  if (activeLayerId === "age_18p_pct") return p18 / pop2024;
+  if (activeLayerId === "age_18p_total") return p18;
+
+  return null;
+}
+
+/* ------------------------------ Style logic ------------------------------ */
+function baseStyle(feature){
+  const d = dataForFeature(feature);
+  const def = LAYER_DEFS.find(x=>x.id===activeLayerId);
+
+  let fill = "#f1f5f9"; // default light gray
+  let fillOpacity = 0.90;
+
+  if (def?.kind === "election"){
+    const e = d.elec;
+    if (e?.winner && Number.isFinite(e?.margin)){
+      const base = partyColor(e.winner);
+      const m = clamp(e.margin, 0, 0.25); // cap at 25% for shading scale
+      const t = clamp(1 - (m / 0.25), 0, 1); // close -> 1
+      // lighter when margin is small
+      fill = mix(base, "#ffffff", 0.20 + 0.65*t);
+    } else if (e?.winner){
+      fill = mix(partyColor(e.winner), "#ffffff", 0.35);
+    } else {
+      fill = "#eef2f7";
+      fillOpacity = 0.75;
+    }
+  } else {
+    const v = valueForLayer(d);
+    const scale = getScaleForActiveLayer();
+    if (v === null || v === undefined || !Number.isFinite(v)){
+      fill = "#eef2f7";
+      fillOpacity = 0.78;
+    } else {
+      if (scale.kind === "seq"){
+        const t = (v - scale.min) / (scale.max - scale.min || 1);
+        fill = seqGreen(clamp(t,0,1));
+      } else if (scale.kind === "div"){
+        const t = (v / (scale.absMax || 1));
+        fill = divRedWhiteGreen(t);
+      } else if (scale.kind === "seq_turnout"){
+        // turnout: greener as higher, but keep contrast
+        const t = (v - scale.min) / (scale.max - scale.min || 1);
+        fill = mix("#eafff1", "#0f7a3f", clamp(t,0,1));
       }
     }
   }
 
-  const workers = [];
-  for (let i=0;i<concurrency;i++) workers.push(worker());
-  await Promise.all(workers);
+  return {
+    color: "#94a3b8",
+    weight: 0.9,
+    opacity: 0.95,
+    fillColor: fill,
+    fillOpacity,
+    lineJoin: "round"
+  };
 }
 
-/* =========================
-   UI wiring
-========================= */
-document.getElementById("layerSel").addEventListener("change", (e)=>{
-  state.layer = e.target.value;
-  refreshMapStyles();
-  noteLine();
-});
+function hoverStyle(){
+  return {
+    color: "#2563eb",
+    weight: 2.2,
+    opacity: 1,
+    fillOpacity: 0.96
+  };
+}
 
-document.getElementById("yearSel").addEventListener("change", (e)=>{
-  state.year = Number(e.target.value);
-  refreshMapStyles();
-});
+function selectedStyle(){
+  return {
+    color: "#0f172a",
+    weight: 3.2,
+    opacity: 1,
+    fillOpacity: 0.97
+  };
+}
 
-document.getElementById("fitBtn").addEventListener("click", ()=>{
-  if (geoLayer) map.fitBounds(geoLayer.getBounds(), { padding:[20,20] });
-});
+function refreshStyles(){
+  if (!geoLayer) return;
+  geoLayer.setStyle(baseStyle);
 
-map.on("click", (e)=>{
-  // click on empty map clears selection
-  if (!e.originalEvent) return;
-  // if clicked a district, its click handler will run; so only clear if no selected change
-  // (Leaflet doesn't easily tell background clicks here, so we keep it simple: ctrl+click to clear)
-});
-
-document.addEventListener("keydown", (e)=>{
-  if (e.key === "Escape") clearSelection();
-});
-
-/* =========================
-   Boot
-========================= */
-(async ()=>{
-  try{
-    await loadAll();
-  }catch(err){
-    console.error(err);
-    document.getElementById("tinyNote").textContent = "Load error. Check console + file names.";
+  if (selectedLayer){
+    selectedLayer.setStyle(selectedStyle());
   }
-})();
+  if (hoverLayer && hoverLayer !== selectedLayer){
+    hoverLayer.setStyle(hoverStyle());
+  }
+}
+
+/* ------------------------------ Selection logic -------------------------- */
+function select(layer, feature){
+  if (selectedLayer){
+    geoLayer.resetStyle(selectedLayer);
+  }
+  selectedLayer = layer;
+  selectedLayer.setStyle(selectedStyle());
+  elClear.style.display = "inline-flex";
+  refreshInfoPanel(feature);
+}
+
+function unselect(){
+  if (!selectedLayer) return;
+  geoLayer.resetStyle(selectedLayer);
+  selectedLayer = null;
+  elClear.style.display = "none";
+  refreshInfoPanel(null);
+  refreshStyles();
+}
+
+/* ------------------------------ Scales/Legend ---------------------------- */
+let cachedScaleKey = null;
+let cachedScale = null;
+
+function getScaleForActiveLayer(){
+  const k = activeLayerId + ":" + activeYear;
+  if (k === cachedScaleKey && cachedScale) return cachedScale;
+
+  const def = LAYER_DEFS.find(x=>x.id===activeLayerId);
+  if (!def || def.kind === "election"){
+    cachedScaleKey = k;
+    cachedScale = { kind:"none", min:0, max:1, absMax:1 };
+    return cachedScale;
+  }
+
+  const values = [];
+  geoLayer?.eachLayer(l => {
+    const f = l.feature;
+    const d = dataForFeature(f);
+    const v = valueForLayer(d);
+    if (Number.isFinite(v)) values.push(v);
+  });
+
+  let scale;
+  if (!values.length){
+    scale = { kind: (activeLayerId==="turnout" ? "seq_turnout" : "seq"), min:0, max:1, absMax:1 };
+  } else if (activeLayerId === "pop_change" || activeLayerId === "pop_change_pct"){
+    const absMax = Math.max(...values.map(v => Math.abs(v))) || 1;
+    scale = { kind:"div", absMax, min: -absMax, max: absMax };
+  } else if (activeLayerId === "turnout"){
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    scale = { kind:"seq_turnout", min, max, absMax:1 };
+  } else {
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    scale = { kind:"seq", min, max, absMax:1 };
+  }
+
+  cachedScaleKey = k;
+  cachedScale = scale;
+  return scale;
+}
+
+function refreshLegend(){
+  const def = LAYER_DEFS.find(x=>x.id===activeLayerId);
+  const scale = getScaleForActiveLayer();
+
+  if (def?.kind === "election"){
+    elLegendDesc.textContent = "Winner color (party). Lighter shade = smaller winning margin.";
+    elLegendBar.style.background = "linear-gradient(90deg, #ffffff, #e2e8f0)";
+    elLegMin.textContent = "Close";
+    elLegMax.textContent = "Landslide";
+    return;
+  }
+
+  if (activeLayerId === "pop_total"){
+    elLegendDesc.textContent = "Population total (light green → dark green).";
+    elLegendBar.style.background = "linear-gradient(90deg, #dcfce7, #166534)";
+    elLegMin.textContent = fmtInt(scale.min);
+    elLegMax.textContent = fmtInt(scale.max);
+    return;
+  }
+
+  if (activeLayerId === "pop_change"){
+    elLegendDesc.textContent = "Population change (decrease = red, increase = green).";
+    elLegendBar.style.background = "linear-gradient(90deg, #b91c1c, #f8fafc, #15803d)";
+    elLegMin.textContent = fmtInt(scale.min);
+    elLegMax.textContent = fmtInt(scale.max);
+    return;
+  }
+
+  if (activeLayerId === "pop_change_pct"){
+    elLegendDesc.textContent = "Population change % (decrease = red, increase = green).";
+    elLegendBar.style.background = "linear-gradient(90deg, #b91c1c, #f8fafc, #15803d)";
+    elLegMin.textContent = (scale.min*100).toFixed(1).replace(".",",") + "%";
+    elLegMax.textContent = (scale.max*100).toFixed(1).replace(".",",") + "%";
+    return;
+  }
+
+  if (activeLayerId === "turnout"){
+    elLegendDesc.textContent = "Turnout = votes cast / registered voters (higher = greener).";
+    elLegendBar.style.background = "linear-gradient(90deg, #eafff1, #0f7a3f)";
+    elLegMin.textContent = (scale.min*100).toFixed(1).replace(".",",") + "%";
+    elLegMax.textContent = (scale.max*100).toFixed(1).replace(".",",") + "%";
+    return;
+  }
+
+  // Age layers
+  if (activeLayerId.includes("age_")){
+    if (activeLayerId.endsWith("_pct")){
+      elLegendDesc.textContent = "Age share (ratio of total population).";
+      elLegendBar.style.background = "linear-gradient(90deg, #dcfce7, #166534)";
+      elLegMin.textContent = (scale.min*100).toFixed(1).replace(".",",") + "%";
+      elLegMax.textContent = (scale.max*100).toFixed(1).replace(".",",") + "%";
+    } else {
+      elLegendDesc.textContent = "Age total (estimated using 2024 population − registered).";
+      elLegendBar.style.background = "linear-gradient(90deg, #dcfce7, #166534)";
+      elLegMin.textContent = fmtInt(scale.min);
+      elLegMax.textContent = fmtInt(scale.max);
+    }
+    return;
+  }
+
+  // fallback
+  elLegendDesc.textContent = def ? def.label : "Legend";
+  elLegendBar.style.background = "linear-gradient(90deg, #dcfce7, #166534)";
+  elLegMin.textContent = "—";
+  elLegMax.textContent = "—";
+}
+
+/* ------------------------------ Info panel -------------------------------- */
+function refreshInfoPanel(featureOrNull){
+  // If pinned: always show pinned feature; hover only updates tooltip.
+  let feature = featureOrNull;
+  if (selectedLayer?.feature) feature = selectedLayer.feature;
+
+  if (!feature){
+    elDName.textContent = "District";
+    elDSub.textContent = "Hover or click a district.";
+    elGrid.innerHTML = "";
+    elBars.style.display = "none";
+    elENote.style.display = "block";
+    elENote.textContent = "Hover or click a district to see details.";
+    return;
+  }
+
+  const d = dataForFeature(feature);
+  const plate = d.plate;
+  const provTr = plate ? provinceNameFromPlate(plate) : "Unknown";
+  const distLabel = feature?.properties?.name || "—";
+
+  elDName.textContent = distLabel;
+  elDSub.innerHTML = `<span class="chip"><span class="sw" style="background:${plate? '#60a5fa':'#94a3b8'}"></span>${provTr}</span>
+                      <span class="chip"><span class="sw" style="background:#34d399"></span>Plate ${plate ?? "—"}</span>
+                      ${selectedLayer ? `<span class="chip"><span class="sw" style="background:#0f172a"></span>Pinned</span>` : ""}`;
+
+  // Metrics
+  const popY = d.pop ? d.pop[String(activeYear)] : null;
+  const pop2024 = d.pop ? d.pop["2024"] : null;
+  const py = prevYear(activeYear);
+  const popPrev = (d.pop && py) ? d.pop[String(py)] : null;
+
+  const popChange = (Number.isFinite(popY) && Number.isFinite(popPrev)) ? (popY - popPrev) : null;
+  const popChangePct = (Number.isFinite(popPrev) && popPrev !== 0 && Number.isFinite(popY)) ? ((popY - popPrev)/popPrev) : null;
+
+  const reg = d.elec?.registered ?? null;
+  const cast = d.elec?.cast ?? null;
+  const valid = d.elec?.valid ?? null;
+
+  const turnout = (Number.isFinite(reg) && reg>0 && Number.isFinite(cast)) ? (cast/reg) : null;
+
+  const u18 = (Number.isFinite(pop2024) && pop2024>0 && Number.isFinite(reg)) ? clamp(pop2024 - reg, 0, pop2024) : null;
+  const u18pct = (Number.isFinite(u18) && Number.isFinite(pop2024) && pop2024>0) ? (u18/pop2024) : null;
+  const p18 = (Number.isFinite(reg)) ? reg : null;
+  const p18pct = (Number.isFinite(p18) && Number.isFinite(pop2024) && pop2024>0) ? (p18/pop2024) : null;
+
+  const metrics = [
+    { k:`Population (${activeYear})`, v: fmtInt(popY), s: py ? `vs ${py}: ${popChange===null?"—":(popChange>=0?"+":"") + fmtInt(popChange)}` : "No previous year" },
+    { k:`Pop change %`, v: popChangePct===null ? "—" : ((popChangePct>=0?"+":"") + (popChangePct*100).toFixed(2).replace(".",",") + "%"), s: py ? `(${py}→${activeYear})` : "—" },
+
+    { k:`Registered (18+)`, v: fmtInt(reg), s: "from election JSON" },
+    { k:`Votes cast`, v: fmtInt(cast), s: "from election JSON" },
+    { k:`Valid votes`, v: fmtInt(valid), s: "from election JSON" },
+    { k:`Turnout`, v: turnout===null ? "—" : (turnout*100).toFixed(2).replace(".",",") + "%", s: "cast / registered" },
+
+    { k:`0–18 total (est.)`, v: fmtInt(u18), s: "2024 pop − registered" },
+    { k:`0–18 %`, v: u18pct===null ? "—" : (u18pct*100).toFixed(2).replace(".",",") + "%", s: "share of 2024 pop" },
+    { k:`18+ total`, v: fmtInt(p18), s: "≈ registered" },
+    { k:`18+ %`, v: p18pct===null ? "—" : (p18pct*100).toFixed(2).replace(".",",") + "%", s: "share of 2024 pop" },
+  ];
+
+  elGrid.innerHTML = metrics.map(m => `
+    <div class="metric">
+      <div class="k">${m.k}</div>
+      <div class="v">${m.v}</div>
+      <div class="s">${m.s}</div>
+    </div>
+  `).join("");
+
+  // Election block
+  const e = d.elec;
+  if (!e || !e.votes || e.votes.size === 0 || !e.winner){
+    elBars.style.display = "none";
+    elENote.style.display = "block";
+    elENote.textContent = "No election data for this district (missing province JSON or join mismatch).";
+    return;
+  }
+
+  elENote.style.display = "none";
+  elBars.style.display = "flex";
+
+  const denom = Number.isFinite(e.denom) && e.denom>0 ? e.denom : (Number.isFinite(e.valid) && e.valid>0 ? e.valid : null);
+  const sorted = [...e.votes.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  const winnerVotes = e.votes.get(e.winner) ?? null;
+  const runnerVotes = e.runnerUp ? (e.votes.get(e.runnerUp) ?? null) : null;
+
+  const wShare = (Number.isFinite(winnerVotes) && Number.isFinite(denom) && denom>0) ? (winnerVotes/denom) : null;
+  const rShare = (Number.isFinite(runnerVotes) && Number.isFinite(denom) && denom>0) ? (runnerVotes/denom) : null;
+  const margin = (Number.isFinite(wShare) && Number.isFinite(rShare)) ? (wShare - rShare) : null;
+
+  // header note in election section (compact)
+  const winnerLabel = cleanLabel(e.winner);
+  const runnerLabel = e.runnerUp ? cleanLabel(e.runnerUp) : null;
+  const marginTxt = (margin===null) ? "—" : (margin*100).toFixed(2).replace(".",",") + "%";
+  const wShareTxt = (wShare===null) ? "—" : (wShare*100).toFixed(2).replace(".",",") + "%";
+
+  // Replace note area with winner summary
+  elENote.style.display = "block";
+  elENote.innerHTML = `
+    <span class="chip"><span class="sw" style="background:${partyColor(winnerLabel)}"></span>${winnerLabel}</span>
+    ${runnerLabel ? `<span class="chip"><span class="sw" style="background:${partyColor(runnerLabel)}"></span>${runnerLabel}</span>` : ""}
+    <span class="chip"><span class="sw" style="background:#0ea5e9"></span>Winner: ${wShareTxt}</span>
+    <span class="chip"><span class="sw" style="background:#94a3b8"></span>Margin: ${marginTxt}</span>
+  `;
+
+  elBars.innerHTML = sorted.map(([p, v]) => {
+    const pct = (Number.isFinite(denom) && denom>0) ? (v/denom) : null;
+    const width = pct ? (pct*100) : 0;
+    const col = partyColor(p);
+    const pctTxt = pct ? (pct*100).toFixed(2).replace(".",",") + "%" : "—";
+    return `
+      <div class="bar-row">
+        <div class="pname" title="${cleanLabel(p)}">
+          <span class="swatch" style="background:${col}; box-shadow: 0 0 0 3px ${mix(col,"#ffffff",0.78)};"></span>
+          ${cleanLabel(p)}
+        </div>
+        <div class="track"><div class="fill" style="width:${width.toFixed(2)}%; background:${col};"></div></div>
+        <div class="val">${pctTxt} • ${fmtInt(v)}</div>
+      </div>
+    `;
+  }).join("");
+}
 </script>
 </body>
 </html>
