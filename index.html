@@ -1206,84 +1206,24 @@ return true;
   }catch(_e){ return false; }
 }
 
-/* ===== COPY/PASTE START =====
-   Replace your existing partyMarginColor() AND your entire baseStyle(feature) with this.
-   (Everything else in the file can stay as-is.)
-*/
-
-// ---- Party color by margin buckets: 0–1, 1–5, 5–10, 10%+ ----
 function partyMarginColor(party, margin){
   if (!party) return "#374151";
   const base = partyColor(party);
-  const m = Number.isFinite(margin) ? margin : 0;
-
-  // 0–1%: lightest tint
-  if (m < 0.01) return mix("#ffffff", base, 0.18);
-
-  // 1–5%: lighter but clearly visible
-  if (m < 0.05) return mix("#e2e8f0", base, 0.45);
-
-  // 5–10%: standard party color (very slight temper)
-  if (m < 0.10) return mix("#475569", base, 0.92);
-
-  // 10%+: solid
-  return base;
+  const t = marginStrength(margin);
+  // keep winner hue faintly visible for close races, ramp hard with margin
+  return mix("#475569", base, 0.25 + 0.75 * t);
 }
 
-// ---- Base polygon style (updated so party colors aren’t “washed” by extra darkening) ----
-const HIT_ALPHA = 0.001; // keep polygons pickable even when fills/lines are toggled off
-
-function baseStyle(feature){
-  const key = featureKey(feature);
-  const did = assignments.get(key) ?? 0;
-
-  const fillOn = document.getElementById("optFill").checked;
-  const linesOn = document.getElementById("optDistrictLines").checked;
-
-  // decide fill color based on selected mode
-  let baseFill = "#374151";
-  if (fillMode === "plan"){
-    baseFill = districtColor(did);
-  }else if (fillMode === "population"){
-    baseFill = popColor(popForKey(key, activeYear));
-  }else if (fillMode === "popchange"){
-    baseFill = popChangeColor(popChangePctForKey(key));
-  }else if (fillMode === "election"){
-    const e = electionByKey.get(key);
-    baseFill = (e && e.winner) ? partyMarginColor(e.winner, e.margin) : "#374151";
-  }else if (fillMode === "redistrict"){
-    const w = (did>0) ? redistrictWinnerById.get(did) : null;
-    const m = (did>0) ? redistrictMarginById.get(did) : null;
-    baseFill = w ? partyMarginColor(w, m) : (did>0 ? "#374151" : "#2b313f");
-  }
-
-  const active = (did === activeDistrict && did !== 0);
-
-  // IMPORTANT: do NOT darken party fills (election/redistrict), it makes them look “too light/gray”.
-  const isPartyFill = (fillMode === "election" || fillMode === "redistrict");
-  const fillColor = active
-    ? mix(baseFill, "#ffffff", 0.18)
-    : (isPartyFill ? baseFill : mix(baseFill, "#000000", 0.04));
-
-  const opacity = (fillMode === "plan")
-    ? (did===0 ? 0.32 : 0.62)
-    : (did===0 ? 0.28 : 0.72);
-
-  return {
-    interactive: true,
-    fill: true,
-    stroke: true,
-    color: linesOn ? (active ? mix(districtLineColor, "#ffffff", 0.70) : districtLineColor) : "transparent",
-    weight: linesOn ? (active ? Math.min(12, districtLineWidth * 2.0) : districtLineWidth) : 0,
-    opacity: linesOn ? 0.95 : 0,
-    dashArray: linesOn ? dashArrayFor(districtLineStyle) : null,
-    fillColor: fillOn ? fillColor : "transparent",
-    fillOpacity: fillOn ? (opacity * districtFillOpacity) : HIT_ALPHA,
-    lineJoin: "round"
-  };
+function hexToRgb(hex){
+  const h = hex.replace("#","").trim();
+  const full = (h.length===3) ? h.split("").map(c=>c+c).join("") : h;
+  const n = parseInt(full,16);
+  return {r:(n>>16)&255, g:(n>>8)&255, b:n&255};
 }
-
-/* ===== COPY/PASTE END ===== */
+function rgbToHex({r,g,b}){
+  const to = v => v.toString(16).padStart(2,"0");
+  return "#" + to(r) + to(g) + to(b);
+}
 
 /* ============================================================
    MAP INIT
