@@ -1,0 +1,3358 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Turkey • Redistricter (Replica)</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+  <style>
+    :root{
+      --bg:#0b0c10;
+      --panel:#11141b;
+      --panel2:#0e1117;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --muted2:#6b7280;
+      --border:#1f2937;
+      --border2:#2a3444;
+      --shadow: 0 18px 70px rgba(0,0,0,.55);
+      --shadow2: 0 10px 32px rgba(0,0,0,.45);
+      --radius: 10px;
+      --radius2: 8px;
+      --accent:#3b82f6;
+      --danger:#ef4444;
+      --ok:#22c55e;
+      --warn:#f59e0b;
+      --chip:#0b1220;
+      --row:#0f1523;
+      --row2:#0c111c;
+      --hover:#121a2d;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      background: radial-gradient(900px 500px at 12% 8%, rgba(59,130,246,.14), transparent 55%),
+                  radial-gradient(900px 500px at 82% 10%, rgba(239,68,68,.10), transparent 55%),
+                  radial-gradient(1100px 700px at 60% 88%, rgba(34,197,94,.10), transparent 58%),
+                  var(--bg);
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      overflow:hidden;
+    }
+
+    /* ===== Top bar (Redistricter-ish) ===== */
+    .top{
+      position:fixed;
+      top:0; left:0; right:0;
+      height:56px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding: 10px 14px;
+      background: linear-gradient(180deg, rgba(0,0,0,.82), rgba(0,0,0,.55));
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      z-index: 2000;
+    }
+    .logo{
+      display:flex; align-items:center; gap:10px;
+      min-width: 220px;
+    }
+    .logo .mark{
+      width:34px; height:34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #ff2d55, #7c3aed);
+      box-shadow: 0 10px 20px rgba(0,0,0,.40);
+      display:grid; place-items:center;
+      font-weight: 1000;
+      letter-spacing: -0.03em;
+    }
+    .search{
+      display:flex; align-items:center; gap:10px;
+      background: rgba(17,20,27,.72);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 12px;
+      padding: 8px 10px;
+      min-width: 240px;
+      box-shadow: var(--shadow2);
+    }
+    .search input{
+      width: 100%;
+      border:none;
+      outline:none;
+      color: var(--text);
+      background: transparent;
+      font-weight: 900;
+      letter-spacing: -0.01em;
+    }
+    .search .hint{ color: var(--muted2); font-size: 12px; font-weight: 800; }
+
+    .menus{
+      display:flex; align-items:center; gap:10px;
+      margin-left: 10px;
+      flex: 1 1 auto;
+    }
+    .menu{
+      position:relative;
+    }
+    .menu button{
+      height: 34px;
+      padding: 0 12px;
+      border-radius: 10px;
+      background: rgba(17,20,27,.66);
+      border:1px solid rgba(255,255,255,.10);
+      color: var(--text);
+      font-weight: 950;
+      cursor:pointer;
+    }
+    .menu button:hover{ background: rgba(17,20,27,.88); }
+    .dropdown{
+      position:absolute;
+      top: 40px; left: 0;
+      min-width: 240px;
+      padding: 8px;
+      background: rgba(15,17,23,.96);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      display:none;
+      z-index: 2001;
+    }
+    .dropdown .item{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding: 9px 10px;
+      border-radius: 10px;
+      cursor:pointer;
+      font-weight: 900;
+      color: var(--text);
+    }
+    .dropdown .item:hover{ background: rgba(59,130,246,.14); }
+    .dropdown .item .sub{ color: var(--muted2); font-weight: 800; font-size: 12px; }
+    .dropdown select{
+      height: 30px;
+      padding: 0 8px;
+      border-radius: 10px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(17,20,27,.80);
+      color: var(--text);
+      font-weight: 950;
+      outline:none;
+    }
+
+    .tog select{
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 10px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(17,20,27,.80);
+      color: var(--text);
+      font-weight: 950;
+      outline:none;
+    }
+
+    
+.numInp{
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(17,20,27,.80);
+  color: var(--text);
+  font-weight: 950;
+  outline:none;
+}
+.smallbtn{
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 10px;
+  background: rgba(17,20,27,.80);
+  border:1px solid rgba(255,255,255,.12);
+  color: var(--text);
+  font-weight: 950;
+  cursor:pointer;
+}
+.smallbtn:hover{ background: rgba(17,20,27,.92); }
+.rangeWrap{
+      display:flex; align-items:center; gap:10px;
+      min-width: 190px;
+    }
+    input[type="range"]{
+      -webkit-appearance:none;
+      appearance:none;
+      width: 140px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.14);
+      outline:none;
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      appearance:none;
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.88);
+      border: 1px solid rgba(0,0,0,.30);
+      cursor:pointer;
+    }
+    input[type="range"]::-moz-range-track{
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.14);
+      border: 0;
+    }
+    input[type="range"]::-moz-range-thumb{
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.88);
+      border: 1px solid rgba(0,0,0,.30);
+      cursor:pointer;
+    }
+    input[type="range"]:disabled{
+      opacity: .45;
+      cursor:not-allowed;
+    }
+
+    .dropdown hr{
+      border:0; height:1px; background: rgba(255,255,255,.08);
+      margin: 8px 0;
+    }
+
+    .top-right{
+      display:flex; align-items:center; gap:10px;
+    }
+    .iconbtn{
+      width:34px; height:34px;
+      border-radius: 10px;
+      background: rgba(17,20,27,.66);
+      border:1px solid rgba(255,255,255,.10);
+      color: var(--text);
+      display:grid; place-items:center;
+      cursor:pointer;
+    }
+    .iconbtn:hover{ background: rgba(17,20,27,.88); }
+
+    /* ===== Layout ===== */
+    .shell{
+      position:fixed;
+      inset: 56px 0 0 0;
+      display:grid;
+      grid-template-columns: 290px 340px 1fr 320px;
+      gap: 10px;
+      padding: 10px;
+      min-height: 0;
+    }
+    .panel{
+      background: rgba(17,20,27,.82);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+      min-height: 0;
+      display:flex;
+      flex-direction:column;
+    }
+    .panel .phead{
+      padding: 10px 12px;
+      background: rgba(0,0,0,.22);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .panel .phead .title{
+      font-size: 18px;
+      font-weight: 1000;
+      letter-spacing: -0.02em;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .panel .phead .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(59,130,246,.12);
+      border:1px solid rgba(59,130,246,.22);
+      font-weight: 1000;
+      color: #c7d2fe;
+      font-size: 12px;
+    }
+    .panel .pbody{
+      padding: 10px 12px;
+      overflow:auto;
+      min-height: 0;
+    }
+
+    /* ===== District list ===== */
+    .district-controls{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.18);
+    }
+    .dc-left{
+      display:flex; align-items:center; gap:10px;
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 12px;
+    }
+    .count{
+      display:inline-flex; align-items:center; gap:8px;
+      background: rgba(0,0,0,.28);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius: 10px;
+      padding: 6px 8px;
+    }
+    .count button{
+      width:26px; height:26px;
+      border-radius: 8px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(17,20,27,.72);
+      color: var(--text);
+      cursor:pointer;
+      font-weight: 1000;
+    }
+    .count span{ min-width: 14px; text-align:center; font-weight: 1000; color: var(--text); }
+
+    .toolrow{
+      display:flex; align-items:center; gap:8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.12);
+    }
+    .toolrow select{
+      width: 100%;
+      height: 32px;
+      padding: 0 10px;
+      border-radius: 10px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(17,20,27,.80);
+      color: var(--text);
+      font-weight: 950;
+      outline:none;
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      font-variant-numeric: tabular-nums;
+    }
+    thead th{
+      text-align:left;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 1000;
+      background: rgba(0,0,0,.10);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+    tbody td{
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      font-size: 13px;
+      font-weight: 900;
+      color: var(--text);
+    }
+    tbody tr{
+      background: rgba(0,0,0,.04);
+      cursor:pointer;
+    }
+    tbody tr:hover{ background: rgba(59,130,246,.10); }
+    tbody tr.active{ background: rgba(59,130,246,.18); }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .sw{
+      width:10px; height:10px;
+      border-radius: 3px;
+      background: #64748b;
+      box-shadow: 0 0 0 3px rgba(255,255,255,.06);
+      flex:0 0 auto;
+    }
+    .devpos{ color: #fecaca; }
+    .devneg{ color: #bbf7d0; }
+    .devna{ color: var(--muted2); font-weight: 800; }
+
+    /* ===== Map settings ===== */
+    .section{
+      margin-top: 14px;
+    }
+    .section h4{
+      margin: 0;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-weight: 1000;
+      letter-spacing: -0.01em;
+      background: rgba(0,0,0,.10);
+      border-top: 1px solid rgba(255,255,255,.08);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .tog{
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      gap:10px;
+    }
+    .tog label{
+      display:flex; align-items:center; gap:10px;
+      font-weight: 900;
+      color: var(--text);
+      font-size: 13px;
+      cursor:pointer;
+    }
+    .tog input{ accent-color: var(--accent); }
+
+    /* ===== Data cards (middle + right) ===== */
+    .addbtn{
+      width: 100%;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid rgba(59,130,246,.24);
+      background: rgba(59,130,246,.14);
+      color: #dbeafe;
+      font-weight: 1000;
+      cursor:pointer;
+    }
+    .addbtn:hover{ background: rgba(59,130,246,.20); }
+
+    .datacard{
+      margin-top: 10px;
+      background: rgba(0,0,0,.16);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: 10px;
+      overflow:hidden;
+    }
+    .dhead{
+      padding: 10px 10px;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .dhead .left{
+      display:flex; align-items:center; gap:10px;
+      font-weight: 1000;
+    }
+    .dhead .dot{
+      width: 10px; height: 10px;
+      border-radius: 3px;
+      background: rgba(255,255,255,.25);
+      box-shadow: 0 0 0 3px rgba(255,255,255,.06);
+    }
+    .dhead .right{
+      display:flex; align-items:center; gap:8px;
+      color: var(--muted);
+      font-weight: 950;
+      font-size: 12px;
+    }
+    .dhead .mini{
+      width: 22px; height: 22px;
+      border-radius: 7px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(17,20,27,.66);
+      color: var(--text);
+      display:grid; place-items:center;
+      cursor:pointer;
+    }
+    .dbody{
+      padding: 10px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      display:none;
+    }
+    .datacard.open .dbody{ display:block; }
+
+    .kv{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding: 6px 0;
+      font-variant-numeric: tabular-nums;
+    }
+    .kv .k{ color: var(--muted); font-weight: 900; font-size: 12px; }
+    .kv .v{ color: var(--text); font-weight: 1000; font-size: 13px; text-align:right; }
+
+    .bars{
+      margin-top: 8px;
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+    }
+    .bar{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:10px;
+      align-items:center;
+    }
+    .track{
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      overflow:hidden;
+    }
+    .fill{
+      height:100%;
+      width: 0%;
+      border-radius: 999px;
+      background: rgba(59,130,246,.75);
+      transition: width .15s ease;
+    }
+    .bar .lab{
+      display:flex; align-items:center; gap:8px;
+      font-size: 12px;
+      font-weight: 1000;
+      color: var(--text);
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 6px;
+    }
+    .bar .lab .sw{ box-shadow: 0 0 0 3px rgba(255,255,255,.06); }
+    .bar .val{
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 950;
+      text-align:right;
+      white-space: nowrap;
+    }
+
+    /* ===== Map column ===== */
+    .mapwrap{
+      background: rgba(255,255,255,.02);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+      position:relative;
+      min-height:0;
+    }
+    #map{ position:absolute; inset:0; }
+    .maphud{
+      position:absolute;
+      top: 10px; left: 10px;
+      z-index: 1200;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background: rgba(0,0,0,.50);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius: 10px;
+      padding: 8px 10px;
+      backdrop-filter: blur(8px);
+      box-shadow: var(--shadow2);
+      max-width: 520px;
+    }
+    .maphud .small{
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      white-space:nowrap;
+    }
+    .maphud .chip{
+      color: #dbeafe;
+      background: rgba(59,130,246,.18);
+      border:1px solid rgba(59,130,246,.24);
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 1000;
+      white-space:nowrap;
+    }
+
+    /* Leaflet cosmetics */
+    /* Ensure districts remain clickable/hoverable even when styled transparent */
+    .leaflet-interactive{ pointer-events: all !important; }
+
+    .leaflet-control-zoom{
+      border-radius: 10px !important;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.12) !important;
+      box-shadow: var(--shadow2);
+    }
+    .leaflet-bar a{
+      background: rgba(0,0,0,.55) !important;
+      color: var(--text) !important;
+      border-bottom:1px solid rgba(255,255,255,.10) !important;
+    }
+    .leaflet-container{
+      background: #0a0d13;
+      outline: none;
+    }
+    .leaflet-tooltip{
+      background: rgba(17,20,27,.95);
+      border:1px solid rgba(255,255,255,.12);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 8px 10px;
+      box-shadow: var(--shadow);
+      font-weight: 1000;
+    }
+
+
+    /* ===== Form controls: keep options readable in dark UI ===== */
+
+    /* Color input styling (dark UI friendly) */
+    .colorInp{
+      width: 44px;
+      height: 30px;
+      padding: 0;
+      border-radius: 10px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(17,20,27,.80);
+      cursor:pointer;
+      overflow:hidden;
+    }
+    .colorInp::-webkit-color-swatch-wrapper{ padding: 0; }
+    .colorInp::-webkit-color-swatch{ border: none; border-radius: 8px; }
+    .colorInp::-moz-color-swatch{ border: none; border-radius: 8px; }
+
+    select{ color-scheme: dark; }
+    select option{ background: rgba(17,20,27,.96); color: var(--text); }
+
+    @media (max-width: 1200px){
+      .shell{ grid-template-columns: 260px 320px 1fr; }
+      .rightpanel{ display:none; }
+    }
+    @media (max-width: 900px){
+      .shell{ grid-template-columns: 1fr; }
+      .panel{ display:none; }
+      .mapwrap{ border-radius: 0; }
+      .top{ position:sticky; }
+    }
+  
+    /* ===== More Data popup ===== */
+    .popup{
+      position: absolute;
+      z-index: 9999;
+      width: 280px;
+      background: var(--panel);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius: 12px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.55);
+      display:none;
+      overflow:hidden;
+    }
+    .popup.show{ display:block; }
+    .popup .poptitle{
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 10px 10px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      font-weight: 900;
+    }
+    .popup .popbody{
+      padding: 10px 10px 12px 10px;
+      display:flex; flex-direction:column; gap:8px;
+      font-size: 13px;
+    }
+    .popup .row{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .popup label.ck{
+      display:flex; align-items:center; gap:10px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .popup .hint{
+      opacity:.8;
+      font-size:12px;
+      margin-top:2px;
+    }
+
+</style>
+</head>
+
+<body>
+  <!-- Top bar -->
+  <div class="top">
+    <div class="logo">
+      <div class="mark">R</div>
+      <div class="search" title="Search a province/district; press Enter">
+        <span class="hint">🔎</span>
+        <input id="searchBox" value="turkey" />
+      </div>
+    </div>
+
+    <div class="menus">
+      <div class="menu" data-menu="file">
+        <button type="button">File</button>
+        <div class="dropdown">
+          <div class="item" id="exportPlan">
+            <span>Export plan</span><span class="sub">.json</span>
+          </div>
+          <div class="item" id="importPlan">
+            <span>Import plan</span><span class="sub">.json</span>
+          </div>
+          <div class="item" id="resetPlan">
+            <span>Reset assignments</span><span class="sub">Danger</span>
+          </div>
+          <hr/>
+          <div class="item" id="fitTurkey">
+            <span>Fit Turkey</span><span class="sub">zoom</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu" data-menu="tools">
+        <button type="button">Tools</button>
+        <div class="dropdown">
+          <div class="item" id="undoBtn"><span>Undo</span><span class="sub">Ctrl+Z</span></div>
+          <div class="item" id="redoBtn"><span>Redo</span><span class="sub">Ctrl+Y</span></div>
+<hr/>
+          <div class="item" id="clearActive"><span>Unassign district</span><span class="sub">set to None</span></div>
+        </div>
+      </div>
+
+      <div class="menu" data-menu="style">
+        <button type="button">Map Style</button>
+        <div class="dropdown">
+          <div class="item" data-style="light"><span>Light basemap</span><span class="sub">default</span></div>
+          <div class="item" data-style="dark"><span>Dark basemap</span><span class="sub">high contrast</span></div>
+        </div>
+      </div>
+
+      <div class="menu" data-menu="advanced">
+        <button type="button">Advanced</button>
+        <div class="dropdown">
+          <div class="item" id="togglePerf"><span>Prefer canvas renderer</span><span class="sub">faster</span></div>
+          <div class="item" id="toggleAutosave"><span>Autosave</span><span class="sub">localStorage</span></div>
+        </div>
+      </div>
+
+      <div class="menu" data-menu="help">
+        <button type="button">Help</button>
+        <div class="dropdown">
+          <div class="item"><span>Controls</span><span class="sub">Click assigns</span></div>
+          <div class="item"><span>Box tool</span><span class="sub">Box tool</span></div>
+          <div class="item"><span>Unassign</span><span class="sub">Hold Alt</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="top-right">
+      <button class="iconbtn" id="userBtn" title="Profile (decorative)">👤</button>
+      <button class="iconbtn" id="themeBtn" title="Toggle UI tint (decorative)">🌙</button>
+    </div>
+  </div>
+
+  <div class="shell">
+    <!-- Left panel -->
+    <div class="panel">
+      <div class="phead">
+        <div class="title">Districts</div>
+        <div class="badge" id="popBadge">—</div>
+      </div>
+
+      <div class="district-controls">
+        <div class="dc-left">
+          <span class="count">
+            <button id="decK" title="Fewer districts">−</button>
+            <span id="kVal">4</span>
+            <button id="incK" title="More districts">+</button>
+          </span>
+          <span id="idealText">Ideal: —</span>
+        </div>
+        <div class="iconbtn" id="statsBtn" title="Stats (decorative)">📊</div>
+      </div>
+
+      <div class="toolrow">
+        <select id="toolSel" title="Selection tool">
+          <option value="click">Click</option>
+          <option value="box">Box</option>
+        </select>
+      </div>
+
+      <div class="pbody" style="padding:0;">
+        <table>
+          <thead>
+            <tr><th>District</th><th>Population</th><th>Deviation</th></tr>
+          </thead>
+          <tbody id="districtRows"></tbody>
+        </table>
+
+        <div class="section">
+          <h4>Map Settings</h4>
+
+          <div class="tog">
+            <label><input type="checkbox" id="optFill" checked /> Fill</label>
+            <select id="fillModeSel" title="Fill mode">
+              <option value="population">Population</option>
+              <option value="popchange">Population Change</option>
+              <option value="election">Election</option>
+              <option value="redistrict">Re-Districted</option>
+              <option value="plan" selected>Plan (District IDs)</option>
+            </select>
+          </div>
+          
+          
+<div class="tog" id="electionControls">
+  <label style="cursor:default;">Election</label>
+  <div style="display:flex; gap:8px; align-items:center; flex:1; justify-content:flex-end;">
+    <select id="electionCycleSel" title="Election year/type" style="min-width: 190px;"></select>
+    <button class="smallbtn" type="button" id="reloadElectionBtn" title="Reload election JSON files">Reload</button>
+  </div>
+</div>
+</div>
+<div id="electionControlsHint" style="padding: 2px 12px 10px; color: var(--muted2); font-weight: 850; font-size: 12px;">
+  Files: <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", monospace;">Kocaeli2023pres1.json</span> •
+  <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", monospace;">Kocaeli2023pres2.json</span>
+</div>
+<div class="tog">
+            <label style="cursor:default;">Fill opacity</label>
+            <div class="rangeWrap">
+              <input type="range" id="fillOpacityRange" min="0" max="100" step="1" value="72" />
+              <span class="muted" id="fillOpacityVal" style="color:var(--muted2); font-weight:950; font-size:12px;">72%</span>
+            </div>
+          </div>
+<div style="padding: 8px 12px; color: var(--muted2); font-weight: 850; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,.06);">
+            Note: Population Change is % change vs the previous census year (2014→2019 or 2019→2024).
+          </div>
+          
+          <div class="tog">
+            <label><input type="checkbox" id="optDistrictLines" checked /> Lines</label>
+            <span class="muted" style="color:var(--muted2); font-weight:900; font-size:12px;">District borders</span>
+            <input class="colorInp" type="color" id="districtLineColorInp" value="#111827" title="District line color" />
+          </div>
+
+          <div class="tog">
+            <label style="cursor:default;">District width</label>
+            <div class="rangeWrap">
+              <input type="range" id="districtLineWidthRange" min="0" max="8" step="0.1" value="1.1" />
+              <span class="muted" id="districtLineWidthVal" style="color:var(--muted2); font-weight:950; font-size:12px;">1.1</span>
+            </div>
+          </div>
+
+          <div class="tog">
+            <label style="cursor:default;">District style</label>
+            <select id="districtLineStyleSel" title="District line style">
+              <option value="solid" selected>Solid</option>
+              <option value="dashed">Dashed</option>
+              <option value="dotted">Dotted</option>
+              <option value="dashdot">Dash-dot</option>
+            </select>
+          </div>
+
+          <hr style="border:0; border-top:1px solid rgba(255,255,255,.08); margin: 6px 12px;" />
+
+          <div class="tog">
+            <label><input type="checkbox" id="optRedistrictLines" checked /> Lines</label>
+            <span class="muted" style="color:var(--muted2); font-weight:900; font-size:12px;">Redistrict borders</span>
+            <input class="colorInp" type="color" id="redistrictLineColorInp" value="#f59e0b" title="Redistrict line color" />
+          </div>
+
+          <div class="tog">
+            <label style="cursor:default;">Redistrict width</label>
+            <div class="rangeWrap">
+              <input type="range" id="redistrictLineWidthRange" min="0" max="14" step="0.2" value="2.4" />
+              <span class="muted" id="redistrictLineWidthVal" style="color:var(--muted2); font-weight:950; font-size:12px;">2.4</span>
+            </div>
+          </div>
+
+          <div class="tog">
+            <label style="cursor:default;">Redistrict style</label>
+            <select id="redistrictLineStyleSel" title="Redistrict line style">
+              <option value="solid">Solid</option>
+              <option value="dashed" selected>Dashed</option>
+              <option value="dotted">Dotted</option>
+              <option value="dashdot">Dash-dot</option>
+            </select>
+          </div>
+<div class="tog">
+            <label><input type="checkbox" id="optLabels" /> Labels</label>
+            <span class="muted" style="color:var(--muted2); font-weight:900; font-size:12px;">Districts</span>
+          </div>
+
+          <div class="tog">
+            <label><input type="checkbox" id="optHover" checked /> Highlight</label>
+            <span class="muted" style="color:var(--muted2); font-weight:900; font-size:12px;">Hover</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Middle panel (active district data) -->
+    <div class="panel">
+      <div class="phead">
+        <div class="title" id="midTitle">District 1</div>
+        <div class="badge" id="midBadge">Active</div>
+
+      </div>
+      <div class="pbody">
+        <button class="addbtn" type="button">+ Add more data</button>
+
+        <div id="districtData"></div>
+      </div>
+    </div>
+
+    <!-- Map -->
+    <div class="mapwrap">
+      <div class="maphud">
+        <span class="small">Active:</span>
+        <span class="chip" id="activeChip">District 1</span>
+        <span class="small">Fill:</span>
+        <span class="chip" id="fillChip">Plan</span>
+        <span class="small">• Click assigns • Box tool: drag to select • Alt unassign</span>
+      </div>
+      <div id="map"></div>
+    </div>
+
+    <!-- Right panel (hovered unit) -->
+    <div class="panel rightpanel">
+      <div class="phead">
+        <div class="title" id="rightTitle">None</div>
+        <div class="badge" id="rightBadge">No hovered block group</div>
+      </div>
+      <div class="pbody">
+        <button class="addbtn" type="button">+ Add more data</button>
+        <div id="hoverData"></div>
+      </div>
+    </div>
+  </div>
+
+<!-- More data popup (triggered by "+ Add more data") -->
+  <div id="moreDataPopup" class="popup" role="dialog" aria-label="Add more data">
+    <div class="poptitle">
+      <div>More data</div>
+      <button class="iconbtn" id="moreDataClose" type="button" title="Close">✕</button>
+    </div>
+    <div class="popbody">
+      <div class="row">
+        <span>Primary population year</span>
+        <select id="primaryYearSel" title="Primary population year">
+          <option value="2024">2024</option>
+          <option value="2019">2019</option>
+          <option value="2014">2014</option>
+        </select>
+      </div>
+
+      <div class="hint">Shown by default: 2019 + 2014.</div>
+
+      <div style="height:6px"></div>
+
+      <div style="font-weight:900; opacity:.9;">Show in panels & tooltips</div>
+      <label class="ck"><input type="checkbox" id="showYear2024" checked> 2024</label>
+      <label class="ck"><input type="checkbox" id="showYear2019" checked> 2019</label>
+      <label class="ck"><input type="checkbox" id="showYear2014" checked> 2014</label>
+    </div>
+  </div>
+
+e
+
+<script>
+/* ============================================================
+   Turkey Redistricter Replica (single-file)
+   - Assign admin-level-6 districts (ilçeler) into K user districts
+   - Shows population + deviation, plus optional election aggregates
+   Data files expected next to this HTML:
+     - turkey-admin-level-6.geojson
+     - province_district_2014_2019_2024.csv
+     - Optional province election JSONs in same folder, named like:
+       - Kocaeli2023.json (general)
+       - Kocaeli2023pres1.json (presidential 1st)
+       - Kocaeli2023pres2.json (presidential 2nd)
+   ============================================================ */
+
+const FILE_GEOJSON = "turkey-admin-level-6.geojson";
+const FILE_POP_CSV = "province_district_2014_2019_2024.csv";
+let activeYear = 2024;
+let activeElectionYear = 2023;
+let activeElectionType = "pres1"; // "" (general), "pres1", "pres2"
+let popYearsVisible = new Set([2019, 2014, 2024]); // 2019 + 2014 shown by default
+
+function yearsDisplayList(){
+  const s = new Set(popYearsVisible);
+  s.add(activeYear); // always include primary
+  const arr = Array.from(s).map(Number).filter(Number.isFinite);
+  arr.sort((a,b) => b - a);
+  return arr;
+}
+
+function findFeatureByKey(k){
+  if (!k) return null;
+  for (const f of allFeatures){
+    if (featureKey(f) === k) return f;
+  }
+  return null;
+}
+
+function sumPopForDistrict(did, year){
+  let s = 0;
+  for (const f of allFeatures){
+    const key = featureKey(f);
+    const a = assignments.get(key) ?? 0;
+    if (a !== did) continue;
+    const p = popByKey.get(key)?.[String(year)];
+    if (Number.isFinite(p)) s += p;
+  }
+  return s;
+}
+
+let fillMode = "plan"; // plan | population | popchange | election | redistrict
+
+// styling prefs
+let districtLineWidth = 1.1;
+let districtLineStyle = "solid"; // solid | dashed | dotted | dashdot
+let districtLineColor = "#111827";
+
+let redistrictLineWidth = 2.4;
+let redistrictLineStyle = "dashed"; // solid | dashed | dotted | dashdot
+let redistrictLineColor = "#f59e0b";
+
+let districtFillOpacity = 0.90; // 0..1
+// Province plate map (from your previous build)
+const PLATE_TO_PROVINCE_TR = {
+  1:"Adana",2:"Adıyaman",3:"Afyonkarahisar",4:"Ağrı",5:"Amasya",6:"Ankara",7:"Antalya",8:"Artvin",9:"Aydın",10:"Balıkesir",
+  11:"Bilecik",12:"Bingöl",13:"Bitlis",14:"Bolu",15:"Burdur",16:"Bursa",17:"Çanakkale",18:"Çankırı",19:"Çorum",20:"Denizli",
+  21:"Diyarbakır",22:"Edirne",23:"Elazığ",24:"Erzincan",25:"Erzurum",26:"Eskişehir",27:"Gaziantep",28:"Giresun",29:"Gümüşhane",30:"Hakkâri",
+  31:"Hatay",32:"Isparta",33:"Mersin",34:"İstanbul",35:"İzmir",36:"Kars",37:"Kastamonu",38:"Kayseri",39:"Kırklareli",40:"Kırşehir",
+  41:"Kocaeli",42:"Konya",43:"Kütahya",44:"Malatya",45:"Manisa",46:"Kahramanmaraş",47:"Mardin",48:"Muğla",49:"Muş",50:"Nevşehir",
+  51:"Niğde",52:"Ordu",53:"Rize",54:"Sakarya",55:"Samsun",56:"Siirt",57:"Sinop",58:"Sivas",59:"Tekirdağ",60:"Tokat",
+  61:"Trabzon",62:"Tunceli",63:"Şanlıurfa",64:"Uşak",65:"Van",66:"Yozgat",67:"Zonguldak",68:"Aksaray",69:"Bayburt",70:"Karaman",
+  71:"Kırıkkale",72:"Batman",73:"Şırnak",74:"Bartın",75:"Ardahan",76:"Iğdır",77:"Yalova",78:"Karabük",79:"Kilis",80:"Osmaniye",81:"Düzce"
+};
+
+const TR_CHARMAP = {"İ":"I","I":"I","ı":"i","Ş":"S","ş":"s","Ğ":"G","ğ":"g","Ü":"U","ü":"u","Ö":"O","ö":"o","Ç":"C","ç":"c","Â":"A","â":"a","Î":"I","î":"i","Û":"U","û":"u"};
+function foldTR(str){
+  const s = (str ?? "").toString().replace(/[İIıŞşĞğÜüÖöÇçÂâÎîÛû]/g, ch => TR_CHARMAP[ch] || ch);
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+function keyify(str){
+  return foldTR(str).toLowerCase().replace(/[^a-z0-9]+/g," ").trim().replace(/\s+/g,"-");
+}
+function cleanLabel(str){ return (str ?? "").toString().replace(/\s+/g," ").trim(); }
+function fmtInt(n){ return Number.isFinite(n) ? Math.round(n).toLocaleString("tr-TR") : "—"; }
+function fmtPct(p){ return (p!==null && Number.isFinite(p)) ? (p*100).toFixed(1).replace(".",",")+"%" : "—"; }
+function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
+
+/* ---- smart path fetch (kept from your old build) ---- */
+function repoBasePath(){
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  if (window.location.hostname.endsWith("github.io") && parts.length >= 1) return "/" + parts[0] + "/";
+  return "/";
+}
+function currentDirUrl(){
+  const u = new URL(window.location.href);
+  u.hash=""; u.search="";
+  if (!u.pathname.endsWith("/")) u.pathname = u.pathname.substring(0, u.pathname.lastIndexOf("/")+1);
+  return u.toString();
+}
+function buildCandidates(file){
+  const baseRepo = repoBasePath();
+  const here = currentDirUrl();
+  const uHere = new URL(file, here).toString();
+  const uUp1  = new URL("../"+file, here).toString();
+  const uUp2  = new URL("../../"+file, here).toString();
+  const uRepoRoot = new URL(file.replace(/^\.\//,""), window.location.origin + baseRepo).toString();
+  const uRepoDocs = new URL("docs/"+file.replace(/^\.\//,""), window.location.origin + baseRepo).toString();
+  const out=[]; const seen=new Set();
+  for (const u of [uHere,uRepoRoot,uRepoDocs,uUp1,uUp2]){ if(!seen.has(u)){ seen.add(u); out.push(u); } }
+  return out;
+}
+async function fetchFirstOk(file, asJson){
+  const candidates = buildCandidates(file);
+  let lastErr = null;
+  for (const url of candidates){
+    try{
+      const res = await fetch(url, { cache:"no-store" });
+      if (!res.ok){ lastErr = `HTTP ${res.status} ${res.statusText}`; continue; }
+      return asJson ? await res.json() : await res.text();
+    }catch(e){ lastErr = "Network/CORS"; }
+  }
+  throw new Error(`Failed to fetch "${file}". Tried:\n- ${candidates.join("\n- ")}\nLast: ${lastErr}`);
+}
+
+// Lighter-weight "maybe" fetch (2 candidates only) for optional files like province JSONs
+async function fetchMaybeJson(file){
+  const here = currentDirUrl();
+  const baseRepo = repoBasePath();
+  const urls = [
+    new URL(file, here).toString(),
+    new URL(file, window.location.origin + baseRepo).toString()
+  ];
+  for (const url of urls){
+    try{
+      const res = await fetch(url, { cache:"no-store" });
+      if (!res.ok) continue;
+      return await res.json();
+    }catch(_e){}
+  }
+  throw new Error("Missing optional file: " + file);
+}
+
+/* ---- Number parsing for election JSONs ---- */
+function parseTrNumber(x){
+  if (x === null || x === undefined) return null;
+  let s = String(x).trim();
+  if (!s) return null;
+  s = s.replace(/\s+/g,"").replace(/%/g,"");
+  if (s.includes(".") && s.includes(",")) s = s.replace(/\./g,"").replace(/,/g,".");
+  else if (s.includes(".")){
+    const parts = s.split(".");
+    if (parts.length > 2) s = parts.join("");
+    else if (parts.length === 2 && parts[1].length === 3) s = parts.join("");
+  } else if (s.includes(",")){
+    const parts = s.split(",");
+    if (parts.length === 2 && parts[1].length !== 3) s = parts.join(".");
+    else s = parts.join("");
+  }
+  s = s.replace(/[^0-9.\-]/g,"");
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
+}
+
+/* ============================================================
+   DATA STORES
+   ============================================================ */
+const popByKey = new Map();      // "plate:districtKey" -> {2014,2019,2024}
+const electionByKey = new Map(); // "plate:districtKey" -> {registered, cast, valid, votes:Map, winner, margin}
+let provincesLoaded = 0;
+let electionLoadToken = 0;
+let electionReloadTimer = null;
+let allFeatures = [];            // cached features for search
+let turkeyBounds = null;
+
+/* ============================================================
+   DISTRICTING STATE
+   ============================================================ */
+let K = 4;
+let activeDistrict = 1; // 1..K, 0 = None/unassigned
+const assignments = new Map();   // featureKey -> districtId
+
+// history (undo/redo)
+let autosave = true;
+const HISTORY_MAX = 60;
+let undoStack = [];
+let redoStack = [];
+
+function pushHistory(patch){
+  undoStack.push(patch);
+  if (undoStack.length > HISTORY_MAX) undoStack.shift();
+  redoStack = [];
+  if (autosave) savePlan();
+}
+
+function applyPatch(patch, dir){
+  // dir = +1 means redo (apply "to"), dir = -1 means undo (apply "from")
+  for (const p of patch){
+    assignments.set(p.key, dir>0 ? p.to : p.from);
+  }
+}
+
+function savePlan(){
+  try{
+    const obj = {
+      v:3,
+      K,
+      activeYear,
+      activeElectionYear,
+      activeElectionType,
+      fillMode,
+      districtLineWidth,
+      districtLineStyle,
+      districtLineColor,
+      redistrictLineWidth,
+      redistrictLineStyle,
+      redistrictLineColor,
+      showFill: (document.getElementById("optFill")?.checked ?? true),
+      showDistrictLines: (document.getElementById("optDistrictLines")?.checked ?? true),
+      showRedistrictLines: (document.getElementById("optRedistrictLines")?.checked ?? true),
+      fillOpacity: districtFillOpacity,
+      assignments: Object.fromEntries(assignments.entries())
+    };
+    localStorage.setItem("tr-redistricter_plan_v1", JSON.stringify(obj));
+  }catch(_e){}
+}
+function loadPlan(){
+  try{
+    const raw = localStorage.getItem("tr-redistricter_plan_v1");
+    if (!raw) return false;
+    const obj = JSON.parse(raw);
+    if (!obj || (obj.v !== 1 && obj.v !== 2 && obj.v !== 3)) return false;
+    if (Number.isFinite(obj.K)) K = clamp(obj.K, 1, 60);
+    if (Number.isFinite(obj.activeYear)) activeYear = obj.activeYear;
+    if (Number.isFinite(obj.activeElectionYear)) activeElectionYear = obj.activeElectionYear;
+    if (typeof obj.activeElectionType === "string") activeElectionType = obj.activeElectionType;
+    if (typeof obj.fillMode === "string") fillMode = obj.fillMode;
+
+    // Backward compatible fields (v:1) and new fields (v:2)
+    if (Number.isFinite(obj.districtLineWidth)) districtLineWidth = clamp(obj.districtLineWidth, 0, 12);
+    else if (Number.isFinite(obj.lineWidth)) districtLineWidth = clamp(obj.lineWidth, 0, 12);
+
+    if (typeof obj.districtLineStyle === "string") districtLineStyle = obj.districtLineStyle;
+    else if (typeof obj.lineStyle === "string") districtLineStyle = obj.lineStyle;
+
+    if (typeof obj.districtLineColor === "string") districtLineColor = obj.districtLineColor;
+    else if (typeof obj.lineColor === "string") districtLineColor = obj.lineColor;
+
+    if (Number.isFinite(obj.redistrictLineWidth)) redistrictLineWidth = clamp(obj.redistrictLineWidth, 0, 24);
+    if (typeof obj.redistrictLineStyle === "string") redistrictLineStyle = obj.redistrictLineStyle;
+    if (typeof obj.redistrictLineColor === "string") redistrictLineColor = obj.redistrictLineColor;
+
+    if (Number.isFinite(obj.fillOpacity)) districtFillOpacity = clamp(obj.fillOpacity, 0, 1);
+    const a = obj.assignments || {};
+    for (const [k,v] of Object.entries(a)){
+      const dv = Number(v);
+      if (Number.isFinite(dv)) assignments.set(k, clamp(dv, 0, K));
+    }
+    
+    // Sync UI (if elements exist)
+    const of = document.getElementById("optFill");
+    if (of && typeof obj.showFill === "boolean") of.checked = obj.showFill;
+
+    const odl = document.getElementById("optDistrictLines");
+    if (odl && typeof obj.showDistrictLines === "boolean") odl.checked = obj.showDistrictLines;
+
+    const orl = document.getElementById("optRedistrictLines");
+    if (orl && typeof obj.showRedistrictLines === "boolean") orl.checked = obj.showRedistrictLines;
+
+    const dlw = document.getElementById("districtLineWidthRange");
+    const dlwv = document.getElementById("districtLineWidthVal");
+    if (dlw && dlwv){
+      dlw.value = String(districtLineWidth);
+      dlwv.textContent = districtLineWidth.toFixed(1);
+    }
+    const dls = document.getElementById("districtLineStyleSel");
+    if (dls) dls.value = districtLineStyle;
+    const dlc = document.getElementById("districtLineColorInp");
+    if (dlc) dlc.value = districtLineColor;
+
+    const rlw = document.getElementById("redistrictLineWidthRange");
+    const rlwv = document.getElementById("redistrictLineWidthVal");
+    if (rlw && rlwv){
+      rlw.value = String(redistrictLineWidth);
+      rlwv.textContent = redistrictLineWidth.toFixed(1);
+    }
+    const rls = document.getElementById("redistrictLineStyleSel");
+    if (rls) rls.value = redistrictLineStyle;
+    const rlc = document.getElementById("redistrictLineColorInp");
+    if (rlc) rlc.value = redistrictLineColor;
+
+    const fo = document.getElementById("fillOpacityRange");
+    const fov = document.getElementById("fillOpacityVal");
+    if (fo && fov){
+      fo.value = String(Math.round(districtFillOpacity * 100));
+      fov.textContent = `${Math.round(districtFillOpacity * 100)}%`;
+    }
+
+    
+// Election cycle dropdown
+syncElectionControlsUI();
+if (typeof syncMapSettingsControls === "function") syncMapSettingsControls();
+return true;
+  }catch(_e){ return false; }
+}
+
+/* ============================================================
+   COLORS
+   ============================================================ */
+const DISTRICT_PALETTE = [
+  "#60a5fa", "#f87171", "#34d399", "#fbbf24", "#a78bfa", "#fb7185",
+  "#22c55e", "#f97316", "#38bdf8", "#e879f9", "#c084fc", "#facc15"
+];
+function districtColor(id){
+  if (id<=0) return "#3b4252";
+  const base = DISTRICT_PALETTE[(id-1) % DISTRICT_PALETTE.length];
+  return base;
+}
+
+function dashArrayFor(style){
+  switch(String(style||"solid")){
+    case "dashed": return "7 7";
+    case "dotted": return "1 7";
+    case "dashdot": return "10 6 2 6";
+    default: return null;
+  }
+}
+
+function mix(hexA, hexB, t){
+  const a = hexToRgb(hexA), b = hexToRgb(hexB);
+  const r = Math.round(a.r + (b.r-a.r)*t);
+  const g = Math.round(a.g + (b.g-a.g)*t);
+  const bl = Math.round(a.b + (b.b-a.b)*t);
+  return rgbToHex({r,g,b:bl});
+}
+
+function marginStrength(m){
+  // m is (winner - runnerup) / denom. Multi-party races: usually 0..~0.30
+  if (!Number.isFinite(m) || m < 0) return 0;
+  const scaled = m / 0.25; // ~25pt margin saturates intensity
+  return clamp(Math.pow(scaled, 0.55), 0, 1);
+}
+function partyMarginColor(party, margin){
+  // Dynamic margin shading (NOT pastel):
+  // 0–1%  : lightest (still vivid)
+  // 1–5%  : lighter
+  // 5–10% : standard
+  // 10%+  : increasingly solid with margin
+  if (!party) return "#374151";
+
+  let m = Number(margin);
+  if (!Number.isFinite(m) || m < 0) m = 0;
+  if (m > 1.0) m = m / 100; // allow "12" meaning 12%
+  m = clamp(m, 0, 1);
+
+  // Start from party color, then "standardize" it so the whole map isn't chalk.
+  const raw = partyColor(party);
+  let {h,s,l} = rgbToHsl(hexToRgb(raw));
+
+  const isNeutral = (s < 0.10); // greys / slates
+  if (isNeutral){
+    // Neutrals: darker, higher contrast (but still neutral).
+    l = Math.min(l, 0.42);
+    s = Math.min(s, 0.12);
+  }else{
+    // Color parties: keep them rich and slightly deeper than the raw palette.
+    s = Math.max(s, 0.94);
+    if (l > 0.52) l = 0.50;  // de-pastelize bright colors
+    if (l < 0.22) l = 0.22;  // don't bury dark colors
+  }
+
+  const sstep = (a,b,x) => {
+    const t = clamp((x - a) / (b - a), 0, 1);
+    return t*t*(3 - 2*t);
+  };
+
+  let dL = 0, dS = 0;
+
+  if (m < 0.01){
+    const u = 1 - sstep(0.00, 0.01, m); // 1 at 0%, 0 at 1%
+    dL += 0.10*u;
+    if (!isNeutral) dS += 0.06*u;
+  }else if (m < 0.05){
+    const u = 1 - sstep(0.01, 0.05, m); // 1 at 1%, 0 at 5%
+    dL += 0.07*u;
+    if (!isNeutral) dS += 0.04*u;
+  }else if (m < 0.10){
+    if (!isNeutral) dS += 0.02; // "standard" but readable
+  }else{
+    const u = sstep(0.10, 0.40, m);      // ramps up to ~40% margin
+    dL -= (0.18 + 0.14*u);               // -0.18 .. -0.32
+    if (!isNeutral) dS += (0.10 + 0.12*u);
+  }
+
+  l = clamp(l + dL, 0.10, 0.60);
+  if (m < 0.05) l = Math.min(l, 0.56);   // close races must not go pastel
+  s = clamp(s + dS, 0, 1);
+
+  return rgbToHex(hslToRgb({h, s, l}));
+}
+
+
+
+
+function hexToRgb(hex){
+  const h = hex.replace("#","").trim();
+  const full = (h.length===3) ? h.split("").map(c=>c+c).join("") : h;
+  const n = parseInt(full,16);
+  return {r:(n>>16)&255, g:(n>>8)&255, b:n&255};
+}
+function rgbToHex({r,g,b}){
+  const to = v => v.toString(16).padStart(2,"0");
+  return "#" + to(r) + to(g) + to(b);
+}
+
+function rgbToHsl({r,g,b}){
+  // r,g,b in 0..255 -> h,s,l in 0..1
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
+
+  if (max !== min){
+    const d = max - min;
+    s = (l > 0.5) ? d / (2 - max - min) : d / (max + min);
+
+    switch(max){
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  return {h, s, l};
+}
+
+function hslToRgb({h,s,l}){
+  // h,s,l in 0..1 -> r,g,b in 0..255
+  function hue2rgb(p, q, t){
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+  }
+
+  let r, g, b;
+  if (s === 0){
+    r = g = b = l; // gray
+  }else{
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  return {r:Math.round(r*255), g:Math.round(g*255), b:Math.round(b*255)};
+}
+
+/* ============================================================
+   MAP INIT
+   ============================================================ */
+let useCanvas = false;
+const map = L.map("map", { zoomControl:true, preferCanvas: false, zoomSnap: 0.25 });
+let tileMode = "light";
+let baseTiles = null;
+let geoLayer = null;
+let redistrictLineLayer = null;   // overlay: borders between assigned districts
+let redistrictEdges = null;       // precomputed shared edges
+let redistrictMarginById = new Map();
+
+let labelLayer = L.layerGroup().addTo(map);
+let hoverKey = null;
+
+function setTiles(mode){
+  tileMode = mode;
+  if (baseTiles) baseTiles.remove();
+  if (mode === "dark"){
+    baseTiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
+      maxZoom: 18
+    }).addTo(map);
+  } else {
+    baseTiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
+      maxZoom: 18
+    }).addTo(map);
+  }
+}
+setTiles("light");
+map.setView([39.0, 35.0], 6);
+
+function hardInvalidate(){ try{ map.invalidateSize(true); }catch{} }
+window.addEventListener("resize", () => setTimeout(hardInvalidate, 0));
+setTimeout(hardInvalidate, 0);
+
+/* ============================================================
+   FEATURE KEYS
+   ============================================================ */
+function featurePlate(feature){
+  const net = feature?.properties?.network || "";
+  const m = String(net).match(/TR(\d+)/i);
+  return m ? Number(m[1]) : null;
+}
+function featureKey(feature){
+  const plate = featurePlate(feature);
+  const dist = feature?.properties?.name || "";
+  return (plate ?? "null") + ":" + keyify(dist);
+}
+function provinceNameFromPlate(plate){
+  return PLATE_TO_PROVINCE_TR[plate] || ("Plate " + plate);
+}
+function tooltipHtml(feature){
+  const plate = featurePlate(feature);
+  const prov = plate ? provinceNameFromPlate(plate) : "Unknown";
+  const dist = feature?.properties?.name || "—";
+  const key = featureKey(feature);
+  const yrs = yearsDisplayList();
+  const pop = popForKey(key, activeYear);
+const chg = popChangePctForKey(key);
+  const did = assignments.get(key) ?? 0;
+  const dname = did === 0 ? "None" : ("District " + did);
+
+  const elec = electionByKey.get(key);
+  const winner = elec?.winner ? cleanLabel(elec.winner) : null;
+  const rdWinner = (did>0) ? (redistrictWinnerById.get(did) ? cleanLabel(redistrictWinnerById.get(did)) : null) : null;
+
+  const parts = [];
+  parts.push(`${prov}`);
+  for (const y of yrs){
+    const py = popForKey(key, y);
+    if (Number.isFinite(py)) parts.push(`Pop ${y}: ${fmtInt(py)}`);
+  }
+  if (chg!==null) parts.push(`Δ ${fmtPct(chg)}`);
+  parts.push(dname);
+  if (fillMode === "election" && winner) parts.push(winner);
+  if (fillMode === "redistrict" && rdWinner) parts.push(`RD ${rdWinner}`);
+
+  return `<div style="font-weight:1000">${dist}</div><div style="margin-top:2px;color:#9ca3af;font-weight:900;font-size:12px">${parts.join(" • ")}</div>`;
+}
+
+
+/* ============================================================
+   FILL MODES (choropleths)
+   ============================================================ */
+let popMin = null, popMax = null, popLogMin = null, popLogMax = null;
+let popChgMaxAbs = null;
+let redistrictWinnerById = new Map(); // districtId -> party
+
+const FILL_MODE_LABEL = {
+  plan: "Plan",
+  population: "Population",
+  popchange: "Pop Change",
+  election: "Election",
+  redistrict: "Re-Districted"
+};
+
+function fillModeLabel(){
+  return FILL_MODE_LABEL[fillMode] || "Plan";
+}
+function popForKey(key, year){
+  const obj = popByKey.get(key);
+  const v = obj ? obj[String(year)] : null;
+  return Number.isFinite(v) ? v : null;
+}
+function popChangePctForKey(key){
+  const y = activeYear;
+  const prev = (y === 2024) ? 2019 : (y === 2019) ? 2014 : null;
+  if (!prev) return null;
+  const a = popForKey(key, y);
+  const b = popForKey(key, prev);
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b <= 0) return null;
+  return (a - b) / b;
+}
+function popColor(p){
+  // Continuous (marginal) population ramp: LIGHT GREEN -> DARK GREEN, auto-scaled to data range.
+  // Extra punch: more vivid low-end + darker mid-range sooner.
+  if (!Number.isFinite(p) || popLogMin === null || popLogMax === null || popLogMax <= popLogMin) return "#374151";
+
+  const t0 = clamp((Math.log(Math.max(1,p)) - popLogMin) / (popLogMax - popLogMin), 0, 1);
+  const t = Math.pow(t0, 0.55);
+
+  return mix("#22c55e", "#052e16", t);
+}
+function popChangeColor(chg){
+  if (!Number.isFinite(chg) || popChgMaxAbs === null || popChgMaxAbs <= 0) return "#374151";
+  const t0 = clamp(Math.abs(chg) / popChgMaxAbs, 0, 1);
+  const t = Math.pow(t0, 0.60);
+
+  return (chg >= 0)
+    ? mix("#22c55e", "#052e16", t)
+    : mix("#ef4444", "#450a0a", t);
+}
+
+
+function recomputeFillCaches(){
+
+  // population range
+  let minP = Infinity, maxP = -Infinity;
+  for (const f of allFeatures){
+    const key = featureKey(f);
+    const p = popForKey(key, activeYear);
+    if (Number.isFinite(p)){
+      if (p < minP) minP = p;
+      if (p > maxP) maxP = p;
+    }
+  }
+  if (minP === Infinity || maxP === -Infinity){
+    popMin = popMax = null;
+    popLogMin = popLogMax = null;
+  }else{
+    popMin = minP; popMax = maxP;
+    popLogMin = Math.log(Math.max(1, popMin));
+    popLogMax = Math.log(Math.max(1, popMax));
+  }
+
+  // population change range (symmetric)
+  let maxAbs = 0;
+  for (const f of allFeatures){
+    const key = featureKey(f);
+    const chg = popChangePctForKey(key);
+    if (Number.isFinite(chg)){
+      const a = Math.abs(chg);
+      if (a > maxAbs) maxAbs = a;
+    }
+  }
+  popChgMaxAbs = (maxAbs > 0) ? maxAbs : null;
+
+  // redistrict winners + margins (aggregate)
+  redistrictWinnerById = new Map();
+  redistrictMarginById = new Map();
+  const { rows } = districtStats();
+  for (const r of rows){
+    if (r.id <= 0) continue;
+
+    const sorted = (r.votes && r.votes.size)
+      ? [...r.votes.entries()].sort((a,b)=>b[1]-a[1])
+      : [];
+
+    const winner = sorted.length ? sorted[0][0] : null;
+    const winnerVotes = sorted.length ? sorted[0][1] : 0;
+    const runnerVotes = (sorted.length > 1) ? sorted[1][1] : 0;
+
+    const denom = (Number.isFinite(r.valid) && r.valid > 0)
+      ? r.valid
+      : sorted.reduce((s,kv)=>s + (Number(kv[1])||0), 0);
+
+    const margin = (winner && Number.isFinite(denom) && denom > 0)
+      ? (winnerVotes - runnerVotes) / denom
+      : null;
+
+    redistrictWinnerById.set(r.id, winner);
+    if (winner) redistrictMarginById.set(r.id, margin);
+  }
+
+  // HUD chip
+  const fillChip = document.getElementById("fillChip");
+  if (fillChip) fillChip.textContent = fillModeLabel();
+  if (fillModeSel) fillModeSel.value = String(fillMode);
+}
+
+/* ============================================================
+   STYLES
+   ============================================================ */
+const HIT_ALPHA = 0.001; // keep polygons pickable even when fills/lines are toggled off
+function baseStyle(feature){
+  const key = featureKey(feature);
+  const did = assignments.get(key) ?? 0;
+
+  const fillOn = document.getElementById("optFill").checked;
+  const linesOn = document.getElementById("optDistrictLines").checked;
+
+  // decide fill color based on selected mode
+  let baseFill = "#374151";
+  if (fillMode === "plan"){
+    baseFill = districtColor(did);
+  }else if (fillMode === "population"){
+    baseFill = popColor(popForKey(key, activeYear));
+  }else if (fillMode === "popchange"){
+    baseFill = popChangeColor(popChangePctForKey(key));
+  }else if (fillMode === "election"){
+    const e = electionByKey.get(key);
+    baseFill = (e && e.winner) ? partyMarginColor(e.winner, e.margin) : "#374151";
+  }else if (fillMode === "redistrict"){
+    const w = (did>0) ? redistrictWinnerById.get(did) : null;
+    const m = (did>0) ? redistrictMarginById.get(did) : null;
+    baseFill = w ? partyMarginColor(w, m) : (did>0 ? "#374151" : "#2b313f");
+  }
+
+  const active = (did === activeDistrict && did !== 0);
+  // Keep the selected area readable without bleaching the color.
+  const fillColor = active ? mix(baseFill, "#ffffff", 0.02) : baseFill;
+
+  // Make non-plan modes more solid (election/pop were looking washed out).
+  const opacity = (fillMode === "plan")
+    ? (did===0 ? 0.34 : 0.74)
+    : (did===0 ? 0.42 : 1.00);
+
+  // Make non-plan modes punchier without forcing users to crank the opacity slider.
+  const modeBoost = (fillMode === "plan") ? 1.0 : 1.75;
+
+  // In non-plan fills, keep opacity from being accidentally "washed out" by a low saved slider value.
+  const effFillOpacity = (fillMode === "plan") ? districtFillOpacity : Math.max(districtFillOpacity, 0.80);
+
+  return {
+    interactive: true,
+    fill: true,
+    stroke: true,
+    color: linesOn ? (active ? mix(districtLineColor, "#ffffff", 0.70) : districtLineColor) : "transparent",
+    weight: linesOn ? (active ? Math.min(12, districtLineWidth * 2.0) : districtLineWidth) : 0,
+    opacity: linesOn ? 0.95 : 0,
+    dashArray: linesOn ? dashArrayFor(districtLineStyle) : null,
+    fillColor: fillOn ? fillColor : "transparent",
+    fillOpacity: fillOn ? Math.min(1, opacity * effFillOpacity * modeBoost) : HIT_ALPHA,
+    lineJoin: "round"
+  };
+}
+
+function hoverStyle(feature){
+  const linesOn = document.getElementById("optDistrictLines").checked;
+  const fillOn = document.getElementById("optFill").checked;
+  const w = Math.max(2.6, districtLineWidth * 2.2);
+  return {
+    color: linesOn ? "#60a5fa" : "transparent",
+    weight: linesOn ? w : 0,
+    opacity: 1,
+    dashArray: linesOn ? dashArrayFor(districtLineStyle) : null,
+    fillOpacity: fillOn ? (0.80 * districtFillOpacity) : HIT_ALPHA
+  };
+}
+function selectedStyle(feature){
+  const linesOn = document.getElementById("optDistrictLines").checked;
+  const fillOn = document.getElementById("optFill").checked;
+  const w = Math.max(3.0, districtLineWidth * 2.6);
+  return {
+    color: linesOn ? "#0ea5e9" : "transparent",
+    weight: linesOn ? w : 0,
+    opacity: 1,
+    dashArray: linesOn ? dashArrayFor(districtLineStyle) : null,
+    fillOpacity: fillOn ? (0.84 * districtFillOpacity) : HIT_ALPHA
+  };
+}
+
+
+/* ============================================================
+   REDISTRICT OUTLINES (boundary between assigned districts)
+   ============================================================ */
+function buildRedistrictEdgeIndex(features){
+  const edgeMap = new Map();
+  const round6 = (x) => Math.round(x * 1e6) / 1e6;
+  const ptKey = (pt) => `${round6(pt[0])},${round6(pt[1])}`;
+  const normKey = (a, b) => {
+    const ak = ptKey(a), bk = ptKey(b);
+    return (ak < bk) ? (ak + "|" + bk) : (bk + "|" + ak);
+  };
+
+  function addSeg(a, b, fKey){
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length < 2 || b.length < 2) return;
+    const a2 = [round6(a[0]), round6(a[1])];
+    const b2 = [round6(b[0]), round6(b[1])];
+    const k = normKey(a2, b2);
+    let e = edgeMap.get(k);
+    if (!e){
+      e = { a: a2, b: b2, features: new Set() };
+      edgeMap.set(k, e);
+    }
+    e.features.add(fKey);
+  }
+
+  function walkPolygon(polyCoords, fKey){
+    if (!Array.isArray(polyCoords)) return;
+    for (const ring of polyCoords){
+      if (!Array.isArray(ring) || ring.length < 2) continue;
+      for (let i = 0; i < ring.length - 1; i++){
+        addSeg(ring[i], ring[i+1], fKey);
+      }
+    }
+  }
+
+  for (const f of (features || [])){
+    const g = f?.geometry;
+    if (!g) continue;
+    const fKey = featureKey(f);
+    if (g.type === "Polygon"){
+      walkPolygon(g.coordinates, fKey);
+    }else if (g.type === "MultiPolygon"){
+      for (const poly of g.coordinates){
+        walkPolygon(poly, fKey);
+      }
+    }
+  }
+
+  redistrictEdges = Array.from(edgeMap.values()).map(e => ({
+    features: Array.from(e.features),
+    latlngs: [[e.a[1], e.a[0]], [e.b[1], e.b[0]]]
+  }));
+}
+
+function updateRedistrictOutline(){
+  if (!map || !redistrictEdges) return;
+
+  const show = document.getElementById("optRedistrictLines")?.checked ?? false;
+  if (!show){
+    if (redistrictLineLayer) redistrictLineLayer.remove();
+    return;
+  }
+
+  const segs = [];
+  for (const e of redistrictEdges){
+    const fs = e.features;
+    if (!fs || !fs.length) continue;
+
+    let a0 = assignments.get(fs[0]) ?? 0;
+    let anyPos = a0 > 0;
+    let allSame = true;
+
+    for (let i = 1; i < fs.length; i++){
+      const ai = assignments.get(fs[i]) ?? 0;
+      if (ai !== a0) allSame = false;
+      if (ai > 0) anyPos = true;
+    }
+
+    if (!anyPos) continue;
+
+    // Keep if outer boundary (single feature) or if shared edge separates different assignments.
+    const keep = (fs.length === 1) ? true : (!allSame);
+    if (keep) segs.push(e.latlngs);
+  }
+
+  const style = {
+    color: redistrictLineColor,
+    weight: redistrictLineWidth,
+    opacity: 0.95,
+    dashArray: dashArrayFor(redistrictLineStyle),
+    lineJoin: "round",
+    interactive: false
+  };
+
+  if (!redistrictLineLayer){
+    redistrictLineLayer = L.polyline(segs, style).addTo(map);
+  }else{
+    redistrictLineLayer.setLatLngs(segs);
+    redistrictLineLayer.setStyle(style);
+    if (!map.hasLayer(redistrictLineLayer)) redistrictLineLayer.addTo(map);
+  }
+  redistrictLineLayer.bringToFront();
+}
+
+/* ============================================================
+   AGGREGATION
+   ============================================================ */
+function totalPopulation(){
+  let sum = 0;
+  for (const f of allFeatures){
+    const key = featureKey(f);
+    const p = popByKey.get(key)?.[String(activeYear)];
+    if (Number.isFinite(p)) sum += p;
+  }
+  return sum;
+}
+function districtStats(){
+  const totals = Array.from({length: K+1}, () => ({ pop:0, voteSum:new Map(), reg:0, cast:0, valid:0, n:0 }));
+  for (const f of allFeatures){
+    const key = featureKey(f);
+    const did = assignments.get(key) ?? 0;
+    const p = popByKey.get(key)?.[String(activeYear)];
+    if (Number.isFinite(p)) totals[did].pop += p;
+    totals[did].n++;
+
+    const e = electionByKey.get(key);
+    if (e){
+      if (Number.isFinite(e.registered)) totals[did].reg += e.registered;
+      if (Number.isFinite(e.cast)) totals[did].cast += e.cast;
+      if (Number.isFinite(e.valid)) totals[did].valid += e.valid;
+      if (e.votes){
+        for (const [party,v] of e.votes.entries()){
+          totals[did].voteSum.set(party, (totals[did].voteSum.get(party) || 0) + v);
+        }
+      }
+    }
+  }
+  const totPop = totalPopulation();
+  const ideal = (K > 0) ? totPop / K : 0;
+  const rows = totals.map((t, idx) => ({
+    id: idx,
+    pop: t.pop,
+    dev: idx === 0 ? (ideal - t.pop) : (t.pop - ideal),
+    turnout: (t.reg>0 && t.cast>=0) ? (t.cast/t.reg) : null,
+    votes: t.voteSum,
+    reg: t.reg, cast: t.cast, valid: t.valid, units: t.n
+  }));
+  return { rows, ideal, total: totPop };
+}
+
+/* ============================================================
+   UI RENDERING
+   ============================================================ */
+const elRows = document.getElementById("districtRows");
+const elKVal = document.getElementById("kVal");
+const elIdeal = document.getElementById("idealText");
+const elPopBadge = document.getElementById("popBadge");
+const elActiveChip = document.getElementById("activeChip");
+const elMidTitle = document.getElementById("midTitle");
+const elDistrictData = document.getElementById("districtData");
+
+const elRightTitle = document.getElementById("rightTitle");
+const elRightBadge = document.getElementById("rightBadge");
+const elHoverData = document.getElementById("hoverData");
+
+function renderDistrictTable(){
+  const { rows, ideal, total } = districtStats();
+
+  elKVal.textContent = String(K);
+  elIdeal.textContent = "Ideal: " + fmtInt(ideal);
+  elPopBadge.textContent = "Pop: " + fmtInt(total);
+
+  elActiveChip.textContent = activeDistrict === 0 ? "None" : ("District " + activeDistrict);
+  elMidTitle.textContent = activeDistrict === 0 ? "None" : ("District " + activeDistrict);
+
+  elRows.innerHTML = "";
+
+  // "None" row first (id=0)
+  for (const r of rows){
+    const tr = document.createElement("tr");
+    if (r.id === activeDistrict) tr.classList.add("active");
+
+    const sw = document.createElement("span");
+    sw.className = "sw";
+    sw.style.background = districtColor(r.id);
+
+    const distCell = document.createElement("td");
+    const pill = document.createElement("span");
+    pill.className = "pill";
+    pill.appendChild(sw);
+    pill.appendChild(document.createTextNode(r.id === 0 ? "None" : String(r.id)));
+    distCell.appendChild(pill);
+
+    const popCell = document.createElement("td");
+    popCell.textContent = fmtInt(r.pop);
+
+    const devCell = document.createElement("td");
+    if (!Number.isFinite(r.dev)){
+      devCell.textContent = "—";
+      devCell.className = "devna";
+    } else {
+      const v = Math.round(r.dev);
+      const s = (v>=0? "+" : "−") + fmtInt(Math.abs(v));
+      devCell.textContent = s;
+      devCell.className = (v>=0 ? "devpos" : "devneg");
+    }
+
+    tr.appendChild(distCell);
+    tr.appendChild(popCell);
+    tr.appendChild(devCell);
+
+    tr.addEventListener("click", () => {
+      activeDistrict = r.id;
+      renderDistrictTable();
+      renderActiveDistrictPanel();
+      refreshStyles();
+      renderLabels();
+    });
+
+    elRows.appendChild(tr);
+  }
+}
+
+function mkCard(title, rightText, dotColor, bodyBuilder){
+  const card = document.createElement("div");
+  card.className = "datacard open";
+
+  const head = document.createElement("div");
+  head.className = "dhead";
+
+  const left = document.createElement("div");
+  left.className = "left";
+  const dot = document.createElement("div");
+  dot.className = "dot";
+  dot.style.background = dotColor || "rgba(255,255,255,.25)";
+  left.appendChild(dot);
+  left.appendChild(document.createTextNode(title));
+
+  const right = document.createElement("div");
+  right.className = "right";
+  const val = document.createElement("span");
+  val.textContent = rightText ?? "";
+  right.appendChild(val);
+
+  const mini = document.createElement("button");
+  mini.className = "mini";
+  mini.type = "button";
+  mini.textContent = "▾";
+  mini.title = "Collapse";
+  mini.addEventListener("click", (e) => {
+    e.stopPropagation();
+    card.classList.toggle("open");
+    mini.textContent = card.classList.contains("open") ? "▾" : "▸";
+  });
+  right.appendChild(mini);
+
+  head.appendChild(left);
+  head.appendChild(right);
+  card.appendChild(head);
+
+  const body = document.createElement("div");
+  body.className = "dbody";
+  bodyBuilder(body);
+  card.appendChild(body);
+
+  // click header toggles too
+  head.addEventListener("click", () => mini.click());
+
+  return card;
+}
+
+function renderActiveDistrictPanel(){
+  const { rows, ideal } = districtStats();
+  const r = rows.find(x => x.id === activeDistrict) || rows[0];
+
+  elDistrictData.innerHTML = "";
+  const color = districtColor(activeDistrict);
+
+  // Population
+  elDistrictData.appendChild(mkCard(
+    "Population (" + activeYear + ")",
+    fmtInt(r.pop),
+    color,
+    (body) => {
+      const yrs = yearsDisplayList();
+      for (const y of yrs){
+        const v = (y === activeYear) ? r.pop : sumPopForDistrict(activeDistrict, y);
+        body.appendChild(kv(String(y), fmtInt(v)));
+      }
+      body.appendChild(kv("Ideal", fmtInt(ideal)));
+      body.appendChild(kv("Deviation", (r.dev>=0? "+" : "−") + fmtInt(Math.abs(r.dev))));
+      body.appendChild(kv("Units", fmtInt(r.units)));
+    }
+  ));
+
+  // Turnout
+ // (if we have election numbers)
+  const turnoutTxt = (r.turnout !== null && Number.isFinite(r.turnout)) ? (r.turnout*100).toFixed(2).replace(".",",") + "%" : "N/A";
+  elDistrictData.appendChild(mkCard(
+    "Turnout",
+    turnoutTxt,
+    "#22c55e",
+    (body) => {
+      body.appendChild(kv("Registered", fmtInt(r.reg)));
+      body.appendChild(kv("Cast", fmtInt(r.cast)));
+      body.appendChild(kv("Valid", fmtInt(r.valid)));
+    }
+  ));
+
+  // Election (top parties)
+  elDistrictData.appendChild(mkCard(
+    "Election (aggregated)",
+    (r.votes && r.votes.size) ? (topParty(r.votes)?.name || "—") : "N/A",
+    "#f59e0b",
+    (body) => {
+      if (!r.votes || r.votes.size === 0){
+        body.appendChild(kv("Data", "No province election JSON found"));
+        body.appendChild(kv("Tip", "Drop province JSONs next to this HTML"));
+        return;
+      }
+      const totalVotes = [...r.votes.values()].reduce((s,v)=>s+v,0);
+      body.appendChild(kv("Votes (sum)", fmtInt(totalVotes)));
+      const top = [...r.votes.entries()].sort((a,b)=>b[1]-a[1]).slice(0,6);
+
+      const bars = document.createElement("div");
+      bars.className = "bars";
+      for (const [p,v] of top){
+        const pct = totalVotes>0 ? (v/totalVotes) : 0;
+        const wrap = document.createElement("div");
+
+        const lab = document.createElement("div");
+        lab.className = "lab";
+        const sw = document.createElement("span");
+        sw.className = "sw";
+        sw.style.background = partyColor(p);
+        lab.appendChild(sw);
+        lab.appendChild(document.createTextNode(cleanLabel(p)));
+
+        const track = document.createElement("div");
+        track.className = "track";
+        const fill = document.createElement("div");
+        fill.className = "fill";
+        fill.style.width = (pct*100).toFixed(1) + "%";
+        fill.style.background = mix(partyColor(p), "#ffffff", 0.15);
+        track.appendChild(fill);
+
+        const row = document.createElement("div");
+        row.className = "bar";
+        const left = document.createElement("div");
+        left.appendChild(lab);
+        left.appendChild(track);
+
+        const val = document.createElement("div");
+        val.className = "val";
+        val.textContent = fmtInt(v) + " (" + (pct*100).toFixed(2).replace(".",",") + "%)";
+
+        row.appendChild(left);
+        row.appendChild(val);
+        bars.appendChild(row);
+      }
+      body.appendChild(bars);
+    }
+  ));
+}
+
+function kv(k,v){
+  const row = document.createElement("div");
+  row.className = "kv";
+  const a = document.createElement("div");
+  a.className = "k";
+  a.textContent = k;
+  const b = document.createElement("div");
+  b.className = "v";
+  b.textContent = (v ?? "—");
+  row.appendChild(a);
+  row.appendChild(b);
+  return row;
+}
+
+const PARTY_COLORS = new Map([
+  ["AK PARTI", "#F7A600"],
+  ["CHP", "#E10600"],
+  ["MHP", "#8B0000"],
+  ["IYI PARTI", "#1D4ED8"],
+  ["YESIL SOL PARTI", "#16A34A"],
+  ["DEM PARTI", "#16A34A"],
+  ["HDP", "#7C3AED"],
+  ["TIP", "#DC2626"],
+  ["YENIDEN REFAH", "#065F46"],
+  ["BBP", "#7F1D1D"],
+  ["ZAFER PARTISI", "#1E3A8A"],
+  ["MEMLEKET", "#0EA5E9"],
+  ["SOL PARTI", "#F97316"],
+  ["TKP", "#991B1B"],
+  ["TKH", "#B91C1C"],
+  ["MILLET", "#64748B"],
+  ["VATAN PARTISI", "#475569"],
+  ["HAK-PAR", "#64748B"],
+  ["GENCPARTI", "#64748B"],
+  ["HKP", "#64748B"],
+  ["ANAP", "#F59E0B"],
+  ["AP", "#2563EB"],
+  ["AB", "#64748B"]
+]);
+
+function partyKey(s){
+  return foldTR(cleanLabel(s)).toUpperCase().replace(/[^A-Z0-9]+/g, " ").trim();
+}
+function hashColorFallback(s){
+  const k = keyify(s);
+  let h = 0;
+  for (let i=0;i<k.length;i++) h = (h*31 + k.charCodeAt(i)) >>> 0;
+  const palette = ["#60a5fa","#f87171","#34d399","#fbbf24","#a78bfa","#fb7185","#22c55e","#f97316"];
+  return palette[h % palette.length];
+}
+function partyColor(name){
+  const k = partyKey(name);
+  return PARTY_COLORS.get(k) || (name ? hashColorFallback(k) : "#374151");
+}
+function topParty(voteMap){
+  const sorted = [...voteMap.entries()].sort((a,b)=>b[1]-a[1]);
+  if (!sorted.length) return null;
+  return { name: sorted[0][0], votes: sorted[0][1] };
+}
+
+function renderHoverPanel(feature){
+  if (!feature){
+    elRightTitle.textContent = "None";
+    elRightBadge.textContent = "No hovered block group";
+    elHoverData.innerHTML = "";
+    return;
+  }
+  const key = featureKey(feature);
+  const plate = featurePlate(feature);
+  const prov = plate ? provinceNameFromPlate(plate) : "Unknown";
+  const name = feature?.properties?.name || "—";
+  const did = assignments.get(key) ?? 0;
+  const pop = popByKey.get(key)?.[String(activeYear)];
+  const elec = electionByKey.get(key);
+
+  elRightTitle.textContent = name;
+  elRightBadge.textContent = prov + " • " + (did===0 ? "None" : ("District " + did));
+  elHoverData.innerHTML = "";
+
+  elHoverData.appendChild(mkCard(
+    "Population (" + activeYear + ")",
+    fmtInt(pop),
+    districtColor(did),
+    (body) => {
+      const yrs = yearsDisplayList();
+      for (const y of yrs){
+        const py = popForKey(key, y);
+        if (Number.isFinite(py)) body.appendChild(kv(String(y), fmtInt(py)));
+      }
+      body.appendChild(kv("Province", prov));
+      body.appendChild(kv("Assigned to", did===0 ? "None" : ("District " + did)));
+      body.appendChild(kv("Key", key));
+    }
+  ));
+
+  const turnout = (elec?.registered>0 && elec?.cast>=0) ? (elec.cast/elec.registered) : null;
+  elHoverData.appendChild(mkCard(
+    "Turnout",
+    (turnout!==null && Number.isFinite(turnout)) ? (turnout*100).toFixed(2).replace(".",",")+"%" : "N/A",
+    "#22c55e",
+    (body) => {
+      body.appendChild(kv("Registered", fmtInt(elec?.registered)));
+      body.appendChild(kv("Cast", fmtInt(elec?.cast)));
+      body.appendChild(kv("Valid", fmtInt(elec?.valid)));
+    }
+  ));
+
+  elHoverData.appendChild(mkCard(
+    "Election (top)",
+    elec?.winner ? cleanLabel(elec.winner) : "N/A",
+    "#f59e0b",
+    (body) => {
+      if (!elec || !elec.votes || elec.votes.size===0){
+        body.appendChild(kv("Data", "N/A"));
+        return;
+      }
+      const totalVotes = [...elec.votes.values()].reduce((s,v)=>s+v,0);
+      const top = [...elec.votes.entries()].sort((a,b)=>b[1]-a[1]).slice(0,6);
+      body.appendChild(kv("Votes (sum)", fmtInt(totalVotes)));
+      for (const [p,v] of top){
+        body.appendChild(kv(cleanLabel(p), fmtInt(v)));
+      }
+    }
+  ));
+}
+
+/* ============================================================
+   LABELS (district numbers)
+   ============================================================ */
+function centroidOfBounds(bounds){
+  const c = bounds.getCenter();
+  return [c.lat, c.lng];
+}
+function renderLabels(){
+  labelLayer.clearLayers();
+  if (!document.getElementById("optLabels").checked) return;
+
+  // compute bounds per district id (excluding None)
+  const b = new Map();
+  geoLayer.eachLayer(layer => {
+    const key = featureKey(layer.feature);
+    const did = assignments.get(key) ?? 0;
+    if (did <= 0) return;
+    const bb = layer.getBounds();
+    if (!b.has(did)) b.set(did, bb);
+    else b.get(did).extend(bb);
+  });
+
+  for (const [did, bounds] of b.entries()){
+    const c = centroidOfBounds(bounds);
+    const icon = L.divIcon({
+      className: "",
+      html: `<div style="
+        width:28px;height:28px;border-radius:12px;
+        display:grid;place-items:center;
+        background: rgba(0,0,0,.55);
+        border:1px solid rgba(255,255,255,.14);
+        color:#e5e7eb;
+        font-weight:1000;
+        box-shadow: 0 10px 28px rgba(0,0,0,.35);
+      ">${did}</div>`,
+      iconSize: [28,28],
+      iconAnchor: [14,14]
+    });
+    L.marker(c, { icon, interactive:false }).addTo(labelLayer);
+  }
+}
+
+/* ============================================================
+   MAP LAYER: draw + events
+   ============================================================ */
+let lastHoverLayer = null;
+
+function drawGeo(gj){
+  if (geoLayer) geoLayer.remove();
+
+  const renderer = useCanvas ? L.canvas({ padding: 0.5 }) : L.svg({ padding: 0.5 });
+
+  geoLayer = L.geoJSON(gj, {
+    renderer,
+    filter: (feature) => {
+      const t = feature?.geometry?.type;
+      return t === "Polygon" || t === "MultiPolygon";
+    },
+    style: baseStyle,
+    onEachFeature: (feature, layer) => {
+      assignments.set(featureKey(feature), assignments.get(featureKey(feature)) ?? 0);
+      layer.bindTooltip(tooltipHtml(feature), { sticky:true, direction:"auto" });
+
+      layer.on("mouseover", () => {
+        if (!document.getElementById("optHover").checked) return;
+        const key = featureKey(feature);
+        hoverKey = key;
+        if (lastHoverLayer && lastHoverLayer !== layer) geoLayer.resetStyle(lastHoverLayer);
+        lastHoverLayer = layer;
+        layer.setStyle(hoverStyle(feature));
+        renderHoverPanel(feature);
+      });
+
+      layer.on("mouseout", () => {
+        if (!document.getElementById("optHover").checked) return;
+        if (lastHoverLayer){
+          geoLayer.resetStyle(lastHoverLayer);
+          lastHoverLayer = null;
+        }
+        hoverKey = null;
+        renderHoverPanel(null);
+      });
+
+      layer.on("click", (e) => {
+        // click assigns unless box tool is active (box handles)
+        if (document.getElementById("toolSel").value === "box") return;
+        const unassign = e.originalEvent.altKey;
+        assignKeys([featureKey(feature)], unassign ? 0 : activeDistrict);
+      });
+    }
+  }).addTo(map);
+
+  allFeatures = gj.features || [];
+  try{
+    buildRedistrictEdgeIndex(allFeatures);
+  }catch(e){
+    console.warn("Edge index failed:", e);
+    redistrictEdges = null;
+  }
+  updateRedistrictOutline();
+  turkeyBounds = geoLayer.getBounds();
+  map.fitBounds(turkeyBounds, { padding:[20,20] });
+  hardInvalidate();
+  refreshStyles();
+  renderLabels();
+}
+
+function refreshStyles(){
+  if (!geoLayer) return;
+  recomputeFillCaches();
+  geoLayer.setStyle(baseStyle);
+  updateRedistrictOutline();
+}
+
+/* ============================================================
+   ASSIGNMENTS
+   ============================================================ */
+function assignKeys(keys, toDistrict){
+  const patch = [];
+  for (const key of keys){
+    const from = assignments.get(key) ?? 0;
+    const to = clamp(toDistrict, 0, K);
+    if (from === to) continue;
+    patch.push({ key, from, to });
+    assignments.set(key, to);
+  }
+  if (!patch.length) return;
+
+  pushHistory(patch);
+
+  // update visuals
+  refreshStyles();
+  geoLayer.eachLayer(layer => layer.setTooltipContent(tooltipHtml(layer.feature)));
+
+  renderDistrictTable();
+  renderActiveDistrictPanel();
+  renderLabels();
+}
+
+function unassignDistrict(did){
+  const keys = [];
+  geoLayer.eachLayer(layer => {
+    const k = featureKey(layer.feature);
+    if ((assignments.get(k) ?? 0) === did) keys.push(k);
+  });
+  assignKeys(keys, 0);
+}
+
+/* ============================================================
+   BOX SELECTION (drag)
+   ============================================================ */
+let boxActive = false;
+let boxStart = null;
+let boxRect = null;
+
+map.on("mousedown", (e) => {
+  const tool = document.getElementById("toolSel").value;
+  if (tool !== "box") return;
+
+  boxActive = true;
+  boxStart = e.latlng;
+  map.dragging.disable();
+
+  if (boxRect) boxRect.remove();
+  boxRect = L.rectangle([boxStart, boxStart], {
+    color: "#60a5fa",
+    weight: 2,
+    fillColor: "#60a5fa",
+    fillOpacity: 0.12,
+    dashArray: "6,6"
+  }).addTo(map);
+});
+
+map.on("mousemove", (e) => {
+  if (!boxActive || !boxRect) return;
+  boxRect.setBounds(L.latLngBounds(boxStart, e.latlng));
+});
+
+map.on("mouseup", (e) => {
+  if (!boxActive) return;
+  boxActive = false;
+  map.dragging.enable();
+
+  if (!boxRect) return;
+  const bounds = boxRect.getBounds();
+  boxRect.remove();
+  boxRect = null;
+
+  const keys = [];
+  geoLayer.eachLayer(layer => {
+    const lb = layer.getBounds();
+    if (bounds.intersects(lb)) keys.push(featureKey(layer.feature));
+  });
+
+  const unassign = e.originalEvent.altKey;
+  assignKeys(keys, unassign ? 0 : activeDistrict);
+});
+
+/* ============================================================
+   POP CSV
+   ============================================================ */
+function parsePopulationCsv(txt){
+  const lines = txt.trim().split(/\r?\n/);
+  if (lines.length < 2) return;
+
+  const header = lines[0].split(",").map(h=>h.trim());
+  const idx = {
+    province: header.indexOf("Province"),
+    district: header.indexOf("District"),
+    y2014: header.indexOf("2014"),
+    y2019: header.indexOf("2019"),
+    y2024: header.indexOf("2024")
+  };
+
+  const provinceToPlate = new Map();
+  for (const [plateStr, trName] of Object.entries(PLATE_TO_PROVINCE_TR)){
+    const plate = Number(plateStr);
+    provinceToPlate.set(keyify(trName), plate);
+    provinceToPlate.set(keyify(foldTR(trName)), plate);
+  }
+  // a few common ASCII variants
+  provinceToPlate.set(keyify("Sanliurfa"), 63);
+  provinceToPlate.set(keyify("Kahramanmaras"), 46);
+  provinceToPlate.set(keyify("Igdir"), 76);
+  provinceToPlate.set(keyify("Kirikkale"), 71);
+  provinceToPlate.set(keyify("Kirsehir"), 40);
+
+  for (let i=1;i<lines.length;i++){
+    const row = lines[i].split(",");
+    const prov = row[idx.province]?.trim();
+    const dist = row[idx.district]?.trim();
+    if (!prov || !dist) continue;
+
+    const plate = provinceToPlate.get(keyify(prov));
+    if (!plate) continue;
+
+    const key = plate + ":" + keyify(dist);
+    const y2014 = Number(row[idx.y2014]);
+    const y2019 = Number(row[idx.y2019]);
+    const y2024 = Number(row[idx.y2024]);
+
+    popByKey.set(key, {
+      2014: Number.isFinite(y2014) ? y2014 : null,
+      2019: Number.isFinite(y2019) ? y2019 : null,
+      2024: Number.isFinite(y2024) ? y2024 : null
+    });
+  }
+}
+
+
+/* ============================================================
+   OPTIONAL ELECTION JSON LOAD
+   - tries 81 province files based on current election selection
+   - filename format:
+       [ProvinceName][ElectionYear][ElectionType].json
+     Examples:
+       Kocaeli2023.json      (general election)
+       Kocaeli2023pres1.json (presidential 1st round)
+       Kocaeli2023pres2.json (presidential 2nd round)
+   ============================================================ */
+function provinceFileName(trName){
+  // ASCII-friendly (default): "Şanlıurfa" -> "Sanliurfa"
+  const folded = foldTR(trName).toLowerCase().replace(/[^a-z0-9]/g,"");
+  return folded ? (folded[0].toUpperCase() + folded.slice(1)) : "Province";
+}
+function provinceFileNameUnicode(trName){
+  // Unicode-friendly: keeps Turkish letters (if you name files that way).
+  const cleaned = cleanLabel(trName).replace(/\s+/g,"").replace(/[^0-9A-Za-zÇĞİÖŞÜçğıöşü]+/g,"");
+  return cleaned ? (cleaned[0].toUpperCase() + cleaned.slice(1)) : provinceFileName(trName);
+}
+const PROVINCE_BASES = Object.entries(PLATE_TO_PROVINCE_TR).map(([plate,tr]) => ({
+  plate: Number(plate),
+  base: provinceFileName(tr),
+  baseU: provinceFileNameUnicode(tr)
+}));
+
+function electionFileName(base, year, type){
+  const y = String(year || "").trim();
+  const t = String(type || "").trim();
+  if (!y) return base + ".json"; // fallback
+  return base + y + t + ".json";
+}
+
+
+/* ============================================================
+   ELECTION CYCLE DISCOVERY (no manual year input)
+   - We probe what files exist and only show those cycles.
+   - Naming:
+       [ProvinceName][ElectionYear].json       (general)
+       [ProvinceName][ElectionYear]pres1.json  (pres 1st)
+       [ProvinceName][ElectionYear]pres2.json  (pres 2nd)
+   Optional:
+       elections_manifest.json  -> [{ "year": 2023, "type": "pres1" }, ...]
+   ============================================================ */
+
+let availableElectionCycles = []; // [{year,type,key,label}]
+const electionFileExistsCache = new Map();
+
+function electionCycleKey(year, type){
+  const y = Number(year);
+  const t = String(type || "");
+  return (Number.isFinite(y) ? String(y) : "") + "|" + t;
+}
+function electionCycleLabel(year, type){
+  const y = Number(year);
+  const t = String(type || "");
+  if (!Number.isFinite(y)) return "Election";
+  if (t === "pres1") return `${y} Pres 1st`;
+  if (t === "pres2") return `${y} Pres 2nd`;
+  return `${y} General`;
+}
+
+async function fileExistsMaybe(name){
+  if (!name) return false;
+  if (electionFileExistsCache.has(name)) return electionFileExistsCache.get(name);
+  let ok = false;
+  try{
+    const res = await fetch(name, { method:"HEAD", cache:"no-store" });
+    ok = res.ok;
+  }catch(_e){
+    try{
+      const res2 = await fetch(name, { method:"GET", cache:"no-store" });
+      ok = res2.ok;
+      try{ res2.body?.cancel(); }catch{}
+    }catch(_e2){
+      ok = false;
+    }
+  }
+  electionFileExistsCache.set(name, ok);
+  return ok;
+}
+
+async function cycleExistsAnyProvince(year, type, sampleN = 12){
+  const y = Number(year);
+  if (!Number.isFinite(y)) return false;
+  const t = String(type || "");
+  const n = Math.min(sampleN, PROVINCE_BASES.length);
+
+  for (let i=0;i<n;i++){
+    const p = PROVINCE_BASES[i];
+
+    const f1 = electionFileName(p.base, y, t);
+    if (await fileExistsMaybe(f1)) return true;
+
+    const f2 = electionFileName(p.baseU, y, t);
+    if (await fileExistsMaybe(f2)) return true;
+  }
+  return false;
+}
+
+async function discoverElectionCycles(){
+  // 1) manifest override
+  try{
+    const man = await fetchMaybeJson("elections_manifest.json");
+    if (Array.isArray(man)){
+      const out = [];
+      for (const row of man){
+        const y = Number(row?.year);
+        const t = String(row?.type || "");
+        if (!Number.isFinite(y)) continue;
+        out.push({ year:y, type:t, key:electionCycleKey(y,t), label:electionCycleLabel(y,t) });
+      }
+      if (out.length){
+        const uniq = new Map();
+        for (const c of out) uniq.set(c.key, c);
+        availableElectionCycles = [...uniq.values()];
+        availableElectionCycles.sort((a,b)=>{
+          if (a.year !== b.year) return b.year - a.year;
+          const ord = (t)=> (t==="pres1"?0:t==="pres2"?1:2);
+          return ord(a.type) - ord(b.type);
+        });
+        return availableElectionCycles;
+      }
+    }
+  }catch(_e){ /* no manifest */ }
+
+  // 2) probe range
+  const nowY = (new Date()).getFullYear();
+  const YEAR_MIN = 2000; // change if you add older files
+  const TYPES = ["pres1","pres2",""]; // probe order
+
+  const candidates = [];
+  for (let y=nowY; y>=YEAR_MIN; y--){
+    for (const t of TYPES) candidates.push({year:y, type:t});
+  }
+
+  let idx = 0;
+  const found = [];
+  const LIMIT = 8;
+
+  async function worker(){
+    while (idx < candidates.length){
+      const mine = idx++;
+      const c = candidates[mine];
+      const exists = await cycleExistsAnyProvince(c.year, c.type, 14);
+      if (exists){
+        found.push({ year:c.year, type:c.type, key:electionCycleKey(c.year,c.type), label:electionCycleLabel(c.year,c.type) });
+      }
+    }
+  }
+
+  await Promise.all(Array.from({length:LIMIT}, () => worker()));
+
+  const uniq = new Map();
+  for (const c of found) uniq.set(c.key, c);
+  availableElectionCycles = [...uniq.values()];
+  availableElectionCycles.sort((a,b)=>{
+    if (a.year !== b.year) return b.year - a.year;
+    const ord = (t)=> (t==="pres1"?0:t==="pres2"?1:2);
+    return ord(a.type) - ord(b.type);
+  });
+  return availableElectionCycles;
+}
+
+function setElectionCycleOptions(sel, cycles){
+  sel.innerHTML = "";
+  if (!cycles?.length){
+    const o = document.createElement("option");
+    o.value = "";
+    o.textContent = "No election files found";
+    sel.appendChild(o);
+    sel.disabled = true;
+    return;
+  }
+  sel.disabled = false;
+  for (const c of cycles){
+    const o = document.createElement("option");
+    o.value = c.key;
+    o.textContent = c.label;
+    sel.appendChild(o);
+  }
+}
+
+function chooseDefaultElectionCycle(cycles){
+  if (!cycles?.length) return null;
+
+  // Prefer saved/current selection if available
+  const curKey = electionCycleKey(activeElectionYear, activeElectionType);
+  const cur = cycles.find(c => c.key === curKey);
+  if (cur) return cur;
+
+  // Otherwise: prefer 2023 pres1 if present, else newest
+  const pref = cycles.find(c => c.year === 2023 && c.type === "pres1");
+  if (pref) return pref;
+
+  return cycles[0];
+}
+
+async function initElectionCycleUI(){
+  const sel = document.getElementById("electionCycleSel");
+  if (!sel) return;
+
+  // Fixed menu: only the 2023 presidential rounds (per your latest decision).
+  const cycles = [
+    { year: 2023, type: "pres1", key: electionCycleKey(2023, "pres1"), label: electionCycleLabel(2023, "pres1") },
+    { year: 2023, type: "pres2", key: electionCycleKey(2023, "pres2"), label: electionCycleLabel(2023, "pres2") }
+  ];
+
+  setElectionCycleOptions(sel, cycles);
+
+  // Default: 2023 Pres 1st round (unless you previously selected Pres 2nd).
+  activeElectionYear = 2023;
+  const savedType = (activeElectionType === "pres2") ? "pres2" : "pres1";
+  activeElectionType = savedType;
+  sel.value = electionCycleKey(2023, savedType);
+}
+
+async function loadElectionAllProvincesLimited(limit, year = activeElectionYear, type = activeElectionType){
+  let loaded = 0;
+  let i = 0;
+
+  const y = Number(year);
+  const useYear = Number.isFinite(y) ? y : year;
+
+  async function worker(){
+    while (i < PROVINCE_BASES.length){
+      const mine = i++;
+      const p = PROVINCE_BASES[mine];
+
+try{
+  // Primary: new naming scheme (ASCII base)
+  const f1 = electionFileName(p.base, useYear, type);
+  const json = await fetchMaybeJson(f1);
+  parseProvinceElectionJson(p.plate, json);
+  loaded++;
+  continue;
+}catch(_e1){
+  try{
+    // Alternate: new naming scheme (Unicode base)
+    const f1u = electionFileName(p.baseU, useYear, type);
+    const jsonU = await fetchMaybeJson(f1u);
+    parseProvinceElectionJson(p.plate, jsonU);
+    loaded++;
+    continue;
+  }catch(_e1u){
+    // Backward compatibility: old style
+    try{
+      const json2 = await fetchMaybeJson(p.base + ".json");
+      parseProvinceElectionJson(p.plate, json2);
+      loaded++;
+    }catch(_e2){
+      try{
+        const json3 = await fetchMaybeJson(p.baseU + ".json");
+        parseProvinceElectionJson(p.plate, json3);
+        loaded++;
+      }catch(_e3){
+        // ignore missing province files
+      }
+    }
+  }
+}
+    }
+  }
+
+  await Promise.all(Array.from({length:limit}, () => worker()));
+  return loaded;
+}
+
+function getField(row, names){
+  for (const n of names){
+    if (row && Object.prototype.hasOwnProperty.call(row, n)) return row[n];
+  }
+  return undefined;
+}
+
+function parseProvinceElectionJson(plate, json){
+  if (!Array.isArray(json)) return;
+  for (const row of json){
+    const ilceId  = getField(row, ["Ilce Id","İlce Id","İlçe Id","İlçe Id ","IlceId","İlçeId"]);
+    const ilceAdi = getField(row, ["Ilce Adi","İlçe Adı","Ilce Adı","İlçe Adi","IlceAdi","İlçeAdı","İlçe Adi "]);
+
+    const idStr = cleanLabel(ilceId);
+    const nameStr = cleanLabel(ilceAdi);
+    if (!nameStr) continue;
+
+    // skip header/percent rows
+    if (!idStr || keyify(idStr) === "oy-orani") continue;
+    const idDigits = foldTR(idStr).replace(/\D/g,"");
+    if (!idDigits || !/^\d+$/.test(idDigits)) continue;
+
+    const registered = parseTrNumber(getField(row, ["Kayitli Secmen Sayisi","Kayıtlı Seçmen Sayısı","KayitliSecmenSayisi","KayıtlıSeçmenSayısı"]));
+    const cast      = parseTrNumber(getField(row, ["Oy Kullanan Secmen Sayisi","Oy Kullanan Seçmen Sayısı","OyKullananSecmenSayisi"]));
+    const valid     = parseTrNumber(getField(row, ["Gecerli Oy Toplami","Geçerli Oy Toplamı","GecerliOyToplami"]));
+
+    const votes = new Map();
+    const skipKeys = new Set([
+      "Ilce Id","İlce Id","İlçe Id","İlçe Id ","IlceId","İlçeId",
+      "Ilce Adi","İlçe Adı","Ilce Adı","İlçe Adi","IlceAdi","İlçeAdı","İlçe Adi ",
+      "Belde Adi","Belde Adı",
+      "Kayitli Secmen Sayisi","Kayıtlı Seçmen Sayısı","KayitliSecmenSayisi","KayıtlıSeçmenSayısı",
+      "Oy Kullanan Secmen Sayisi","Oy Kullanan Seçmen Sayısı","OyKullananSecmenSayisi",
+      "Gecerli Oy Toplami","Geçerli Oy Toplamı","GecerliOyToplami"
+    ]);
+
+    for (const [k,v] of Object.entries(row)){
+      if (skipKeys.has(k)) continue;
+      const kk = cleanLabel(k);
+      if (!kk) continue;
+      if (keyify(kk) === "oy-orani") continue;
+
+      const n = parseTrNumber(v);
+      if (!Number.isFinite(n) || n <= 0) continue;
+      votes.set(kk, n);
+    }
+
+    const sorted = [...votes.entries()].sort((a,b)=>b[1]-a[1]);
+    const winner = sorted[0]?.[0] ?? null;
+    const winnerVotes = sorted[0]?.[1] ?? null;
+    const runnerVotes = sorted[1]?.[1] ?? null;
+
+    const denom = (Number.isFinite(valid) && valid>0) ? valid :
+      (sorted.reduce((s,[_p,val])=>s+val,0) || null);
+
+    const margin = (Number.isFinite(winnerVotes) && Number.isFinite(runnerVotes) && Number.isFinite(denom) && denom>0)
+      ? (winnerVotes-runnerVotes)/denom
+      : null;
+
+    const key = plate + ":" + keyify(nameStr);
+    electionByKey.set(key, { plate, districtNameRaw:nameStr, registered, cast, valid, denom, votes, winner, margin });
+  }
+}
+
+function syncElectionControlsUI(){
+  const sel = document.getElementById("electionCycleSel");
+  if (!sel) return;
+  const key = electionCycleKey(activeElectionYear, activeElectionType);
+  if (sel.value !== key) sel.value = key;
+}
+async function reloadElectionData(year = activeElectionYear, type = activeElectionType, silent = false){
+  const token = ++electionLoadToken;
+
+  const y = Number(year);
+  if (Number.isFinite(y)) activeElectionYear = y;
+  activeElectionType = String(type || "");
+
+  // Keep UI aligned
+  syncElectionControlsUI();
+
+  electionByKey.clear();
+
+  try{
+    provincesLoaded = await loadElectionAllProvincesLimited(6, activeElectionYear, activeElectionType);
+  }catch(_e){
+    provincesLoaded = 0;
+  }
+
+  // If another reload started, drop stale work.
+  if (token !== electionLoadToken) return;
+
+  // If map already exists, refresh everything that depends on elections.
+  if (geoLayer){
+    renderDistrictTable();
+    renderActiveDistrictPanel();
+    renderHoverPanel(findFeatureByKey(hoverKey));
+    refreshStyles();
+    geoLayer.eachLayer(layer => layer.setTooltipContent(tooltipHtml(layer.feature)));
+  }
+
+  if (autosave) savePlan();
+  if (!silent) console.log("Election data loaded. Province files:", provincesLoaded);
+}
+
+/* ============================================================
+   MENUS + HOTKEYS
+   ============================================================ */
+function closeAllMenus(){
+  document.querySelectorAll(".dropdown").forEach(d => d.style.display = "none");
+}
+document.addEventListener("click", (e) => {
+  const m = e.target.closest(".menu");
+  if (!m) closeAllMenus();
+});
+document.querySelectorAll(".menu").forEach(m => {
+  const btn = m.querySelector("button");
+  const dd = m.querySelector(".dropdown");
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = dd.style.display === "block";
+    closeAllMenus();
+    dd.style.display = open ? "none" : "block";
+  });
+});
+
+// File actions
+document.getElementById("fitTurkey").addEventListener("click", () => {
+  closeAllMenus();
+  if (turkeyBounds) map.fitBounds(turkeyBounds, { padding:[20,20] });
+});
+document.getElementById("resetPlan").addEventListener("click", () => {
+  closeAllMenus();
+  if (!confirm("Reset all assignments?")) return;
+  const keys = [...assignments.keys()];
+  assignKeys(keys, 0);
+});
+document.getElementById("exportPlan").addEventListener("click", () => {
+  closeAllMenus();
+  const obj = {
+      v:2,
+      K,
+      activeYear,
+      fillMode,
+      districtLineWidth,
+      districtLineStyle,
+      districtLineColor,
+      redistrictLineWidth,
+      redistrictLineStyle,
+      redistrictLineColor,
+      showFill: (document.getElementById("optFill")?.checked ?? true),
+      showDistrictLines: (document.getElementById("optDistrictLines")?.checked ?? true),
+      showRedistrictLines: (document.getElementById("optRedistrictLines")?.checked ?? true),
+      fillOpacity: districtFillOpacity,
+      assignments: Object.fromEntries(assignments.entries())
+    };
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type:"application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "turkey_plan.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+document.getElementById("importPlan").addEventListener("click", async () => {
+  closeAllMenus();
+  const inp = document.createElement("input");
+  inp.type = "file";
+  inp.accept = "application/json";
+  inp.onchange = async () => {
+    const f = inp.files?.[0];
+    if (!f) return;
+    const txt = await f.text();
+    const obj = JSON.parse(txt);
+    if (!obj || obj.v !== 1 || !obj.assignments) return alert("Invalid plan file.");
+    K = clamp(Number(obj.K || K), 1, 60);
+    activeYear = Number(obj.activeYear || activeYear);
+    assignments.clear();
+    for (const [k,v] of Object.entries(obj.assignments)){
+      assignments.set(k, clamp(Number(v), 0, K));
+    }
+    undoStack = []; redoStack = [];
+    renderDistrictTable();
+    renderActiveDistrictPanel();
+    refreshStyles();
+    renderLabels();
+    if (autosave) savePlan();
+  };
+  inp.click();
+});
+
+// Tools actions
+document.getElementById("undoBtn").addEventListener("click", () => { closeAllMenus(); undo(); });
+document.getElementById("redoBtn").addEventListener("click", () => { closeAllMenus(); redo(); });
+document.getElementById("clearActive").addEventListener("click", () => {
+  closeAllMenus();
+  if (activeDistrict <= 0) return;
+  if (!confirm(`Unassign everything in District ${activeDistrict}?`)) return;
+  unassignDistrict(activeDistrict);
+});
+
+function undo(){
+  const patch = undoStack.pop();
+  if (!patch) return;
+  applyPatch(patch, -1);
+  redoStack.push(patch);
+  refreshStyles();
+  geoLayer.eachLayer(layer => layer.setTooltipContent(tooltipHtml(layer.feature)));
+  renderDistrictTable();
+  renderActiveDistrictPanel();
+  renderLabels();
+  if (autosave) savePlan();
+}
+function redo(){
+  const patch = redoStack.pop();
+  if (!patch) return;
+  applyPatch(patch, +1);
+  undoStack.push(patch);
+  refreshStyles();
+  geoLayer.eachLayer(layer => layer.setTooltipContent(tooltipHtml(layer.feature)));
+  renderDistrictTable();
+  renderActiveDistrictPanel();
+  renderLabels();
+  if (autosave) savePlan();
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey && e.key.toLowerCase() === "z"){ e.preventDefault(); undo(); }
+  if (e.ctrlKey && e.key.toLowerCase() === "y"){ e.preventDefault(); redo(); }
+});
+
+// Map style dropdown
+document.querySelectorAll('[data-style]').forEach(el => {
+  el.addEventListener("click", () => {
+    closeAllMenus();
+    setTiles(el.getAttribute("data-style"));
+  });
+});
+document.getElementById("togglePerf").addEventListener("click", () => {
+  closeAllMenus();
+  useCanvas = !useCanvas;
+  // redraw geo layer with different renderer
+  if (geoLayer){
+    const gj = geoLayer.toGeoJSON();
+    drawGeo(gj);
+  }
+});
+document.getElementById("toggleAutosave").addEventListener("click", () => {
+  closeAllMenus();
+  autosave = !autosave;
+  alert("Autosave: " + (autosave ? "ON" : "OFF"));
+});
+
+// K control
+document.getElementById("incK").addEventListener("click", () => { setK(K+1); });
+document.getElementById("decK").addEventListener("click", () => { setK(K-1); });
+
+function setK(newK){
+  const nk = clamp(Number(newK), 1, 60);
+  if (nk === K) return;
+  K = nk;
+  // clamp any existing assignments above K
+  const keys = [...assignments.keys()];
+  const patch = [];
+  for (const key of keys){
+    const from = assignments.get(key) ?? 0;
+    const to = clamp(from, 0, K);
+    if (from !== to) patch.push({ key, from, to });
+  }
+  if (patch.length) pushHistory(patch);
+  if (activeDistrict > K) activeDistrict = K;
+  renderDistrictTable();
+  renderActiveDistrictPanel();
+  refreshStyles();
+  renderLabels();
+}
+
+// toggles
+["optFill","optDistrictLines","optHover"].forEach(id => {
+  document.getElementById(id).addEventListener("change", () => refreshStyles());
+});
+document.getElementById("optLabels").addEventListener("change", () => renderLabels());
+
+
+function syncMapSettingsControls(){
+  const fillOn = document.getElementById("optFill")?.checked ?? true;
+  const districtLinesOn = document.getElementById("optDistrictLines")?.checked ?? true;
+  const redistrictLinesOn = document.getElementById("optRedistrictLines")?.checked ?? true;
+
+  const fo = document.getElementById("fillOpacityRange");
+  if (fo) fo.disabled = !fillOn;
+
+  const dlw = document.getElementById("districtLineWidthRange");
+  if (dlw) dlw.disabled = !districtLinesOn;
+
+  const dls = document.getElementById("districtLineStyleSel");
+  if (dls) dls.disabled = !districtLinesOn;
+
+  const dlc = document.getElementById("districtLineColorInp");
+  if (dlc) dlc.disabled = !districtLinesOn;
+
+  const rlw = document.getElementById("redistrictLineWidthRange");
+  if (rlw) rlw.disabled = !redistrictLinesOn;
+
+  const rls = document.getElementById("redistrictLineStyleSel");
+  if (rls) rls.disabled = !redistrictLinesOn;
+
+  const rlc = document.getElementById("redistrictLineColorInp");
+  if (rlc) rlc.disabled = !redistrictLinesOn;
+}
+
+// Fill opacity
+const fillOpacityRange = document.getElementById("fillOpacityRange");
+const fillOpacityVal = document.getElementById("fillOpacityVal");
+if (fillOpacityRange && fillOpacityVal){
+  fillOpacityRange.value = String(Math.round(districtFillOpacity * 100));
+  const upd = () => {
+    districtFillOpacity = clamp(Number(fillOpacityRange.value) / 100, 0, 1);
+    fillOpacityVal.textContent = `${Math.round(districtFillOpacity*100)}%`;
+    refreshStyles();
+    if (autosave) savePlan();
+  };
+  fillOpacityRange.addEventListener("input", upd);
+  fillOpacityRange.addEventListener("change", upd);
+  upd();
+}
+
+// District line width
+const districtLineWidthRange = document.getElementById("districtLineWidthRange");
+const districtLineWidthVal = document.getElementById("districtLineWidthVal");
+if (districtLineWidthRange && districtLineWidthVal){
+  districtLineWidthRange.value = String(districtLineWidth);
+  const upd = () => {
+    districtLineWidth = clamp(Number(districtLineWidthRange.value), 0, 12);
+    districtLineWidthVal.textContent = districtLineWidth.toFixed(1);
+    refreshStyles();
+    if (autosave) savePlan();
+  };
+  districtLineWidthRange.addEventListener("input", upd);
+  districtLineWidthRange.addEventListener("change", upd);
+  upd();
+}
+
+// District line style
+const districtLineStyleSel = document.getElementById("districtLineStyleSel");
+if (districtLineStyleSel){
+  districtLineStyleSel.value = districtLineStyle;
+  districtLineStyleSel.addEventListener("change", () => {
+    districtLineStyle = String(districtLineStyleSel.value || "solid");
+    refreshStyles();
+    if (autosave) savePlan();
+  });
+}
+
+// District line color
+const districtLineColorInp = document.getElementById("districtLineColorInp");
+if (districtLineColorInp){
+  districtLineColorInp.value = districtLineColor;
+  districtLineColorInp.addEventListener("input", () => {
+    districtLineColor = String(districtLineColorInp.value || "#111827");
+    refreshStyles();
+    if (autosave) savePlan();
+  });
+}
+
+// Redistrict line width
+const redistrictLineWidthRange = document.getElementById("redistrictLineWidthRange");
+const redistrictLineWidthVal = document.getElementById("redistrictLineWidthVal");
+if (redistrictLineWidthRange && redistrictLineWidthVal){
+  redistrictLineWidthRange.value = String(redistrictLineWidth);
+  const upd = () => {
+    redistrictLineWidth = clamp(Number(redistrictLineWidthRange.value), 0, 24);
+    redistrictLineWidthVal.textContent = redistrictLineWidth.toFixed(1);
+    updateRedistrictOutline();
+    if (autosave) savePlan();
+  };
+  redistrictLineWidthRange.addEventListener("input", upd);
+  redistrictLineWidthRange.addEventListener("change", upd);
+  upd();
+}
+
+// Redistrict line style
+const redistrictLineStyleSel = document.getElementById("redistrictLineStyleSel");
+if (redistrictLineStyleSel){
+  redistrictLineStyleSel.value = redistrictLineStyle;
+  redistrictLineStyleSel.addEventListener("change", () => {
+    redistrictLineStyle = String(redistrictLineStyleSel.value || "dashed");
+    updateRedistrictOutline();
+    if (autosave) savePlan();
+  });
+}
+
+// Redistrict line color
+const redistrictLineColorInp = document.getElementById("redistrictLineColorInp");
+if (redistrictLineColorInp){
+  redistrictLineColorInp.value = redistrictLineColor;
+  redistrictLineColorInp.addEventListener("input", () => {
+    redistrictLineColor = String(redistrictLineColorInp.value || "#f59e0b");
+    updateRedistrictOutline();
+    if (autosave) savePlan();
+  });
+}
+
+syncMapSettingsControls();
+document.getElementById("optFill")?.addEventListener("change", () => {
+  syncMapSettingsControls();
+  refreshStyles();
+  if (autosave) savePlan();
+});
+document.getElementById("optDistrictLines")?.addEventListener("change", () => {
+  syncMapSettingsControls();
+  refreshStyles();
+  if (autosave) savePlan();
+});
+document.getElementById("optRedistrictLines")?.addEventListener("change", () => {
+  syncMapSettingsControls();
+  updateRedistrictOutline();
+  if (autosave) savePlan();
+});
+// Fill mode selector
+const fillModeSel = document.getElementById("fillModeSel");
+if (fillModeSel){
+  fillModeSel.value = fillMode;
+  fillModeSel.addEventListener("change", () => {
+    fillMode = String(fillModeSel.value || "plan");
+    refreshStyles();
+    geoLayer?.eachLayer(layer => layer.setTooltipContent(tooltipHtml(layer.feature)));
+    if (autosave) savePlan();
+  });
+}
+
+
+
+const electionCycleSel = document.getElementById("electionCycleSel");
+const reloadElectionBtn = document.getElementById("reloadElectionBtn");
+
+function selectedElectionCycle(){
+  if (!electionCycleSel){
+    return { year: activeElectionYear, type: activeElectionType };
+  }
+  const v = String(electionCycleSel.value || "");
+  const parts = v.split("|");
+  const y = Number(parts[0]);
+  const t = parts.slice(1).join("|") || "";
+  return { year: (Number.isFinite(y) ? y : activeElectionYear), type: t };
+}
+
+function scheduleElectionReload(){
+  if (electionReloadTimer) clearTimeout(electionReloadTimer);
+  electionReloadTimer = setTimeout(() => {
+    const { year, type } = selectedElectionCycle();
+    reloadElectionData(year, type, true);
+  }, 250);
+}
+
+if (electionCycleSel){
+  electionCycleSel.addEventListener("change", scheduleElectionReload);
+}
+if (reloadElectionBtn){
+  reloadElectionBtn.addEventListener("click", () => {
+    const { year, type } = selectedElectionCycle();
+    reloadElectionData(year, type, false);
+  });
+}
+);
+}
+
+// Year selector (population + tooltips + deviation)
+const yearSel = document.getElementById("yearSel");
+if (yearSel){
+  yearSel.value = String(activeYear);
+  yearSel.addEventListener("change", () => {
+    activeYear = Number(yearSel.value);
+    renderDistrictTable();
+    renderActiveDistrictPanel();
+    refreshStyles();
+    geoLayer?.eachLayer(layer => layer.setTooltipContent(tooltipHtml(layer.feature)));
+    if (autosave) savePlan();
+  });
+}
+
+// More-data popup (global)
+const morePop = document.getElementById("moreDataPopup");
+const moreClose = document.getElementById("moreDataClose");
+const primaryYearSel = document.getElementById("primaryYearSel");
+const ck2024 = document.getElementById("showYear2024");
+const ck2019 = document.getElementById("showYear2019");
+const ck2014 = document.getElementById("showYear2014");
+
+function syncMoreDataUI(){
+  if (primaryYearSel) primaryYearSel.value = String(activeYear);
+  if (ck2024) ck2024.checked = popYearsVisible.has(2024);
+  if (ck2019) ck2019.checked = popYearsVisible.has(2019);
+  if (ck2014) ck2014.checked = popYearsVisible.has(2014);
+}
+
+function refreshPopUI(){
+  renderDistrictTable();
+  renderActiveDistrictPanel();
+  renderHoverPanel(findFeatureByKey(hoverKey));
+  refreshStyles();
+  geoLayer?.eachLayer(layer => layer.setTooltipContent(tooltipHtml(layer.feature)));
+  if (autosave) savePlan();
+}
+
+function openMoreDataPopup(anchorEl){
+  if (!morePop) return;
+  syncMoreDataUI();
+
+  morePop.classList.add("show");
+
+  // Position near the clicked button (now measurable)
+  const r = anchorEl.getBoundingClientRect();
+  const pr = morePop.getBoundingClientRect();
+  const pad = 8;
+  const left = Math.max(pad, Math.min(window.innerWidth - (pr.width + pad), r.left));
+  const top = Math.max(pad, Math.min(window.innerHeight - (pr.height + pad), r.bottom + 6));
+  morePop.style.left = left + "px";
+  morePop.style.top = top + "px";
+}
+
+function closeMoreDataPopup(){
+  morePop?.classList.remove("show");
+}
+
+document.querySelectorAll("button.addbtn").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openMoreDataPopup(btn);
+  });
+});
+
+moreClose?.addEventListener("click", closeMoreDataPopup);
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeMoreDataPopup();
+});
+
+document.addEventListener("click", (e) => {
+  if (!morePop?.classList.contains("show")) return;
+  const t = e.target;
+  if (morePop.contains(t)) return;
+  // clicking anywhere else closes
+  closeMoreDataPopup();
+});
+
+primaryYearSel?.addEventListener("change", () => {
+  activeYear = Number(primaryYearSel.value);
+  refreshPopUI();
+});
+
+function applyYearChecks(){
+  const next = new Set();
+  if (ck2024?.checked) next.add(2024);
+  if (ck2019?.checked) next.add(2019);
+  if (ck2014?.checked) next.add(2014);
+
+  // Always include the primary year (even if user unticks it)
+  next.add(activeYear);
+
+  popYearsVisible = next;
+  refreshPopUI();
+}
+
+ck2024?.addEventListener("change", applyYearChecks);
+ck2019?.addEventListener("change", applyYearChecks);
+ck2014?.addEventListener("change", applyYearChecks);
+
+
+// Search box
+document.getElementById("searchBox").addEventListener("keydown", (e) => {
+  if (e.key !== "Enter") return;
+  const q = cleanLabel(e.target.value);
+  if (!q) return;
+  const qk = keyify(q);
+
+  // 1) exact district match
+  let bestLayer = null;
+  geoLayer.eachLayer(layer => {
+    const name = layer.feature?.properties?.name || "";
+    if (keyify(name) === qk) bestLayer = layer;
+  });
+
+  // 2) province match (fit bounds of plate)
+  if (!bestLayer){
+    for (const [plate, prov] of Object.entries(PLATE_TO_PROVINCE_TR)){
+      if (keyify(prov) === qk){
+        const bb = L.latLngBounds();
+        geoLayer.eachLayer(layer => {
+          const p = featurePlate(layer.feature);
+          if (Number(p) === Number(plate)) bb.extend(layer.getBounds());
+        });
+        if (bb.isValid()) map.fitBounds(bb, { padding:[20,20] });
+        return;
+      }
+    }
+  }
+
+  if (bestLayer){
+    map.fitBounds(bestLayer.getBounds(), { padding:[30,30] });
+    // flash highlight
+    bestLayer.setStyle(selectedStyle(bestLayer.feature));
+    setTimeout(() => geoLayer.resetStyle(bestLayer), 800);
+  }
+});
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+(async function boot(){
+  // Load pop first (so tooltip has pop)
+  try{
+    const csvText = await fetchFirstOk(FILE_POP_CSV, false);
+    parsePopulationCsv(csvText);
+  }catch(e){
+    console.warn(e);
+  }
+
+  // Load stored plan if any
+  loadPlan();
+  if (yearSel) yearSel.value = String(activeYear);
+  if (fillModeSel) fillModeSel.value = String(fillMode);
+
+  // Optional province election JSONs (year/type)
+  await initElectionCycleUI();
+  syncElectionControlsUI();
+  try{
+    provincesLoaded = await loadElectionAllProvincesLimited(6, activeElectionYear, activeElectionType);
+  }catch(_e){
+    provincesLoaded = 0;
+  }
+
+  // GeoJSON
+  try{
+    const geo = await fetchFirstOk(FILE_GEOJSON, true);
+    drawGeo(geo);
+  }catch(e){
+    console.error(e);
+    alert("GeoJSON failed to load. Open console for details.");
+    return;
+  }
+
+  renderDistrictTable();
+  renderActiveDistrictPanel();
+  renderHoverPanel(null);
+  refreshStyles();
+
+  if (autosave) savePlan();
+  console.log("Ready. Province election files loaded:", provincesLoaded);
+})();
+</script>
+</body>
+</html>
