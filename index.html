@@ -156,7 +156,29 @@
       outline:none;
     }
 
-    .rangeWrap{
+    
+.numInp{
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(17,20,27,.80);
+  color: var(--text);
+  font-weight: 950;
+  outline:none;
+}
+.smallbtn{
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 10px;
+  background: rgba(17,20,27,.80);
+  border:1px solid rgba(255,255,255,.12);
+  color: var(--text);
+  font-weight: 950;
+  cursor:pointer;
+}
+.smallbtn:hover{ background: rgba(17,20,27,.92); }
+.rangeWrap{
       display:flex; align-items:center; gap:10px;
       min-width: 190px;
     }
@@ -776,7 +798,25 @@
             </select>
           </div>
           
-          <div class="tog">
+          
+<div class="tog" id="electionControls">
+  <label style="cursor:default;">Election</label>
+  <div style="display:flex; gap:8px; align-items:center; flex:1; justify-content:flex-end;">
+    <input class="numInp" id="electionYearInp" type="number" min="1900" max="2100" step="1" value="2023" title="Election year" />
+    <select id="electionTypeSel" title="Election type">
+      <option value="">General</option>
+      <option value="pres1">Pres 1st</option>
+      <option value="pres2">Pres 2nd</option>
+    </select>
+    <button class="smallbtn" type="button" id="reloadElectionBtn" title="Reload election JSON files">Reload</button>
+  </div>
+</div>
+<div id="electionControlsHint" style="padding: 2px 12px 10px; color: var(--muted2); font-weight: 850; font-size: 12px;">
+  Files: <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">Kocaeli2023.json</span> •
+  <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">Kocaeli2023pres1.json</span> •
+  <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">Kocaeli2023pres2.json</span>
+</div>
+<div class="tog">
             <label style="cursor:default;">Fill opacity</label>
             <div class="rangeWrap">
               <input type="range" id="fillOpacityRange" min="0" max="100" step="1" value="72" />
@@ -925,12 +965,17 @@ e
    Data files expected next to this HTML:
      - turkey-admin-level-6.geojson
      - province_district_2014_2019_2024.csv
-     - Optional province election JSONs (e.g., Usak.json) in same folder
+     - Optional province election JSONs in same folder, named like:
+       - Kocaeli2023.json (general)
+       - Kocaeli2023pres1.json (presidential 1st)
+       - Kocaeli2023pres2.json (presidential 2nd)
    ============================================================ */
 
 const FILE_GEOJSON = "turkey-admin-level-6.geojson";
 const FILE_POP_CSV = "province_district_2014_2019_2024.csv";
 let activeYear = 2024;
+let activeElectionYear = 2023;
+let activeElectionType = ""; // "" (general), "pres1", "pres2"
 let popYearsVisible = new Set([2019, 2014, 2024]); // 2019 + 2014 shown by default
 
 function yearsDisplayList(){
@@ -972,7 +1017,7 @@ let redistrictLineWidth = 2.4;
 let redistrictLineStyle = "dashed"; // solid | dashed | dotted | dashdot
 let redistrictLineColor = "#f59e0b";
 
-let districtFillOpacity = 0.72; // 0..1
+let districtFillOpacity = 0.90; // 0..1
 // Province plate map (from your previous build)
 const PLATE_TO_PROVINCE_TR = {
   1:"Adana",2:"Adıyaman",3:"Afyonkarahisar",4:"Ağrı",5:"Amasya",6:"Ankara",7:"Antalya",8:"Artvin",9:"Aydın",10:"Balıkesir",
@@ -1079,6 +1124,9 @@ function parseTrNumber(x){
    ============================================================ */
 const popByKey = new Map();      // "plate:districtKey" -> {2014,2019,2024}
 const electionByKey = new Map(); // "plate:districtKey" -> {registered, cast, valid, votes:Map, winner, margin}
+let provincesLoaded = 0;
+let electionLoadToken = 0;
+let electionReloadTimer = null;
 let allFeatures = [];            // cached features for search
 let turkeyBounds = null;
 
@@ -1112,9 +1160,11 @@ function applyPatch(patch, dir){
 function savePlan(){
   try{
     const obj = {
-      v:2,
+      v:3,
       K,
       activeYear,
+      activeElectionYear,
+      activeElectionType,
       fillMode,
       districtLineWidth,
       districtLineStyle,
@@ -1136,9 +1186,11 @@ function loadPlan(){
     const raw = localStorage.getItem("tr-redistricter_plan_v1");
     if (!raw) return false;
     const obj = JSON.parse(raw);
-    if (!obj || (obj.v !== 1 && obj.v !== 2)) return false;
+    if (!obj || (obj.v !== 1 && obj.v !== 2 && obj.v !== 3)) return false;
     if (Number.isFinite(obj.K)) K = clamp(obj.K, 1, 60);
     if (Number.isFinite(obj.activeYear)) activeYear = obj.activeYear;
+    if (Number.isFinite(obj.activeElectionYear)) activeElectionYear = obj.activeElectionYear;
+    if (typeof obj.activeElectionType === "string") activeElectionType = obj.activeElectionType;
     if (typeof obj.fillMode === "string") fillMode = obj.fillMode;
 
     // Backward compatible fields (v:1) and new fields (v:2)
@@ -1201,7 +1253,13 @@ function loadPlan(){
       fov.textContent = `${Math.round(districtFillOpacity * 100)}%`;
     }
 
-    if (typeof syncMapSettingsControls === "function") syncMapSettingsControls();
+    
+const ey = document.getElementById("electionYearInp");
+if (ey) ey.value = String(activeElectionYear);
+const et = document.getElementById("electionTypeSel");
+if (et) et.value = String(activeElectionType || "");
+
+if (typeof syncMapSettingsControls === "function") syncMapSettingsControls();
 return true;
   }catch(_e){ return false; }
 }
@@ -1243,12 +1301,66 @@ function marginStrength(m){
   return clamp(Math.pow(scaled, 0.55), 0, 1);
 }
 function partyMarginColor(party, margin){
+  // Dynamic margin shading (NOT pastel):
+  // 0–1%  : lightest (still vivid)
+  // 1–5%  : lighter
+  // 5–10% : standard
+  // 10%+  : increasingly solid with margin
   if (!party) return "#374151";
-  const base = partyColor(party);
-  const t = marginStrength(margin);
-  // keep winner hue faintly visible for close races, ramp hard with margin
-  return mix("#475569", base, 0.25 + 0.75 * t);
+
+  let m = Number(margin);
+  if (!Number.isFinite(m) || m < 0) m = 0;
+  if (m > 1.0) m = m / 100; // allow "12" meaning 12%
+  m = clamp(m, 0, 1);
+
+  // Start from party color, then "standardize" it so the whole map isn't chalk.
+  const raw = partyColor(party);
+  let {h,s,l} = rgbToHsl(hexToRgb(raw));
+
+  const isNeutral = (s < 0.10); // greys / slates
+  if (isNeutral){
+    // Neutrals: darker, higher contrast (but still neutral).
+    l = Math.min(l, 0.42);
+    s = Math.min(s, 0.12);
+  }else{
+    // Color parties: keep them rich and slightly deeper than the raw palette.
+    s = Math.max(s, 0.94);
+    if (l > 0.52) l = 0.50;  // de-pastelize bright colors
+    if (l < 0.22) l = 0.22;  // don't bury dark colors
+  }
+
+  const sstep = (a,b,x) => {
+    const t = clamp((x - a) / (b - a), 0, 1);
+    return t*t*(3 - 2*t);
+  };
+
+  let dL = 0, dS = 0;
+
+  if (m < 0.01){
+    const u = 1 - sstep(0.00, 0.01, m); // 1 at 0%, 0 at 1%
+    dL += 0.10*u;
+    if (!isNeutral) dS += 0.06*u;
+  }else if (m < 0.05){
+    const u = 1 - sstep(0.01, 0.05, m); // 1 at 1%, 0 at 5%
+    dL += 0.07*u;
+    if (!isNeutral) dS += 0.04*u;
+  }else if (m < 0.10){
+    if (!isNeutral) dS += 0.02; // "standard" but readable
+  }else{
+    const u = sstep(0.10, 0.40, m);      // ramps up to ~40% margin
+    dL -= (0.18 + 0.14*u);               // -0.18 .. -0.32
+    if (!isNeutral) dS += (0.10 + 0.12*u);
+  }
+
+  l = clamp(l + dL, 0.10, 0.60);
+  if (m < 0.05) l = Math.min(l, 0.56);   // close races must not go pastel
+  s = clamp(s + dS, 0, 1);
+
+  return rgbToHex(hslToRgb({h, s, l}));
 }
+
+
+
 
 function hexToRgb(hex){
   const h = hex.replace("#","").trim();
@@ -1259,6 +1371,51 @@ function hexToRgb(hex){
 function rgbToHex({r,g,b}){
   const to = v => v.toString(16).padStart(2,"0");
   return "#" + to(r) + to(g) + to(b);
+}
+
+function rgbToHsl({r,g,b}){
+  // r,g,b in 0..255 -> h,s,l in 0..1
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
+
+  if (max !== min){
+    const d = max - min;
+    s = (l > 0.5) ? d / (2 - max - min) : d / (max + min);
+
+    switch(max){
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  return {h, s, l};
+}
+
+function hslToRgb({h,s,l}){
+  // h,s,l in 0..1 -> r,g,b in 0..255
+  function hue2rgb(p, q, t){
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+  }
+
+  let r, g, b;
+  if (s === 0){
+    r = g = b = l; // gray
+  }else{
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  return {r:Math.round(r*255), g:Math.round(g*255), b:Math.round(b*255)};
 }
 
 /* ============================================================
@@ -1377,18 +1534,28 @@ function popChangePctForKey(key){
   return (a - b) / b;
 }
 function popColor(p){
+  // Continuous (marginal) population ramp: LIGHT GREEN -> DARK GREEN, auto-scaled to data range.
+  // Extra punch: more vivid low-end + darker mid-range sooner.
   if (!Number.isFinite(p) || popLogMin === null || popLogMax === null || popLogMax <= popLogMin) return "#374151";
-  const t = clamp((Math.log(Math.max(1,p)) - popLogMin) / (popLogMax - popLogMin), 0, 1);
-  return mix("#bbf7d0", "#166534", t);
+
+  const t0 = clamp((Math.log(Math.max(1,p)) - popLogMin) / (popLogMax - popLogMin), 0, 1);
+  const t = Math.pow(t0, 0.55);
+
+  return mix("#22c55e", "#052e16", t);
 }
 function popChangeColor(chg){
   if (!Number.isFinite(chg) || popChgMaxAbs === null || popChgMaxAbs <= 0) return "#374151";
-  const t = clamp(Math.abs(chg) / popChgMaxAbs, 0, 1);
+  const t0 = clamp(Math.abs(chg) / popChgMaxAbs, 0, 1);
+  const t = Math.pow(t0, 0.60);
+
   return (chg >= 0)
-    ? mix("#bbf7d0", "#166534", t)
-    : mix("#fecaca", "#991b1b", t);
+    ? mix("#22c55e", "#052e16", t)
+    : mix("#ef4444", "#450a0a", t);
 }
+
+
 function recomputeFillCaches(){
+
   // population range
   let minP = Infinity, maxP = -Infinity;
   for (const f of allFeatures){
@@ -1482,11 +1649,19 @@ function baseStyle(feature){
   }
 
   const active = (did === activeDistrict && did !== 0);
-  const fillColor = active ? mix(baseFill, "#ffffff", 0.18) : mix(baseFill, "#000000", 0.04);
+  // Keep the selected area readable without bleaching the color.
+  const fillColor = active ? mix(baseFill, "#ffffff", 0.02) : baseFill;
 
+  // Make non-plan modes more solid (election/pop were looking washed out).
   const opacity = (fillMode === "plan")
-    ? (did===0 ? 0.32 : 0.62)
-    : (did===0 ? 0.28 : 0.72);
+    ? (did===0 ? 0.34 : 0.74)
+    : (did===0 ? 0.42 : 1.00);
+
+  // Make non-plan modes punchier without forcing users to crank the opacity slider.
+  const modeBoost = (fillMode === "plan") ? 1.0 : 1.75;
+
+  // In non-plan fills, keep opacity from being accidentally "washed out" by a low saved slider value.
+  const effFillOpacity = (fillMode === "plan") ? districtFillOpacity : Math.max(districtFillOpacity, 0.80);
 
   return {
     interactive: true,
@@ -1497,7 +1672,7 @@ function baseStyle(feature){
     opacity: linesOn ? 0.95 : 0,
     dashArray: linesOn ? dashArrayFor(districtLineStyle) : null,
     fillColor: fillOn ? fillColor : "transparent",
-    fillOpacity: fillOn ? (opacity * districtFillOpacity) : HIT_ALPHA,
+    fillOpacity: fillOn ? Math.min(1, opacity * effFillOpacity * modeBoost) : HIT_ALPHA,
     lineJoin: "round"
   };
 }
@@ -2268,35 +2443,87 @@ function parsePopulationCsv(txt){
   }
 }
 
+
 /* ============================================================
    OPTIONAL ELECTION JSON LOAD
-   - tries 81 province files like "Usak.json" etc
+   - tries 81 province files based on current election selection
+   - filename format:
+       [ProvinceName][ElectionYear][ElectionType].json
+     Examples:
+       Kocaeli2023.json      (general election)
+       Kocaeli2023pres1.json (presidential 1st round)
+       Kocaeli2023pres2.json (presidential 2nd round)
    ============================================================ */
 function provinceFileName(trName){
+  // ASCII-friendly (default): "Şanlıurfa" -> "Sanliurfa"
   const folded = foldTR(trName).toLowerCase().replace(/[^a-z0-9]/g,"");
   return folded ? (folded[0].toUpperCase() + folded.slice(1)) : "Province";
 }
-const PROVINCE_FILES = Object.entries(PLATE_TO_PROVINCE_TR).map(([plate,tr]) => ({
+function provinceFileNameUnicode(trName){
+  // Unicode-friendly: keeps Turkish letters (if you name files that way).
+  const cleaned = cleanLabel(trName).replace(/\s+/g,"").replace(/[^0-9A-Za-zÇĞİÖŞÜçğıöşü]+/g,"");
+  return cleaned ? (cleaned[0].toUpperCase() + cleaned.slice(1)) : provinceFileName(trName);
+}
+const PROVINCE_BASES = Object.entries(PLATE_TO_PROVINCE_TR).map(([plate,tr]) => ({
   plate: Number(plate),
-  file: provinceFileName(tr) + ".json"
+  base: provinceFileName(tr),
+  baseU: provinceFileNameUnicode(tr)
 }));
 
-async function loadElectionAllProvincesLimited(limit){
+function electionFileName(base, year, type){
+  const y = String(year || "").trim();
+  const t = String(type || "").trim();
+  if (!y) return base + ".json"; // fallback
+  return base + y + t + ".json";
+}
+
+async function loadElectionAllProvincesLimited(limit, year = activeElectionYear, type = activeElectionType){
   let loaded = 0;
   let i = 0;
+
+  const y = Number(year);
+  const useYear = Number.isFinite(y) ? y : year;
+
   async function worker(){
-    while (i < PROVINCE_FILES.length){
+    while (i < PROVINCE_BASES.length){
       const mine = i++;
-      const p = PROVINCE_FILES[mine];
+      const p = PROVINCE_BASES[mine];
+
+try{
+  // Primary: new naming scheme (ASCII base)
+  const f1 = electionFileName(p.base, useYear, type);
+  const json = await fetchMaybeJson(f1);
+  parseProvinceElectionJson(p.plate, json);
+  loaded++;
+  continue;
+}catch(_e1){
+  try{
+    // Alternate: new naming scheme (Unicode base)
+    const f1u = electionFileName(p.baseU, useYear, type);
+    const jsonU = await fetchMaybeJson(f1u);
+    parseProvinceElectionJson(p.plate, jsonU);
+    loaded++;
+    continue;
+  }catch(_e1u){
+    // Backward compatibility: old style
+    try{
+      const json2 = await fetchMaybeJson(p.base + ".json");
+      parseProvinceElectionJson(p.plate, json2);
+      loaded++;
+    }catch(_e2){
       try{
-        const json = await fetchMaybeJson(p.file);
-        parseProvinceElectionJson(p.plate, json);
+        const json3 = await fetchMaybeJson(p.baseU + ".json");
+        parseProvinceElectionJson(p.plate, json3);
         loaded++;
-      }catch(_e){
+      }catch(_e3){
         // ignore missing province files
       }
     }
   }
+}
+    }
+  }
+
   await Promise.all(Array.from({length:limit}, () => worker()));
   return loaded;
 }
@@ -2363,6 +2590,47 @@ function parseProvinceElectionJson(plate, json){
     const key = plate + ":" + keyify(nameStr);
     electionByKey.set(key, { plate, districtNameRaw:nameStr, registered, cast, valid, denom, votes, winner, margin });
   }
+}
+
+function syncElectionControlsUI(){
+  const ey = document.getElementById("electionYearInp");
+  if (ey) ey.value = String(activeElectionYear);
+  const et = document.getElementById("electionTypeSel");
+  if (et) et.value = String(activeElectionType || "");
+}
+
+async function reloadElectionData(year = activeElectionYear, type = activeElectionType, silent = false){
+  const token = ++electionLoadToken;
+
+  const y = Number(year);
+  if (Number.isFinite(y)) activeElectionYear = y;
+  activeElectionType = String(type || "");
+
+  // Keep UI aligned
+  syncElectionControlsUI();
+
+  electionByKey.clear();
+
+  try{
+    provincesLoaded = await loadElectionAllProvincesLimited(6, activeElectionYear, activeElectionType);
+  }catch(_e){
+    provincesLoaded = 0;
+  }
+
+  // If another reload started, drop stale work.
+  if (token !== electionLoadToken) return;
+
+  // If map already exists, refresh everything that depends on elections.
+  if (geoLayer){
+    renderDistrictTable();
+    renderActiveDistrictPanel();
+    renderHoverPanel(findFeatureByKey(hoverKey));
+    refreshStyles();
+    geoLayer.eachLayer(layer => layer.setTooltipContent(tooltipHtml(layer.feature)));
+  }
+
+  if (autosave) savePlan();
+  if (!silent) console.log("Election data loaded. Province files:", provincesLoaded);
 }
 
 /* ============================================================
@@ -2691,6 +2959,37 @@ if (fillModeSel){
 }
 
 
+
+const electionYearInp = document.getElementById("electionYearInp");
+const electionTypeSel = document.getElementById("electionTypeSel");
+const reloadElectionBtn = document.getElementById("reloadElectionBtn");
+
+function scheduleElectionReload(){
+  if (electionReloadTimer) clearTimeout(electionReloadTimer);
+  electionReloadTimer = setTimeout(() => {
+    const y = electionYearInp ? Number(electionYearInp.value) : activeElectionYear;
+    const t = electionTypeSel ? String(electionTypeSel.value || "") : activeElectionType;
+    reloadElectionData(y, t, true);
+  }, 250);
+}
+
+if (electionYearInp){
+  electionYearInp.value = String(activeElectionYear);
+  electionYearInp.addEventListener("change", scheduleElectionReload);
+  electionYearInp.addEventListener("input", scheduleElectionReload);
+}
+if (electionTypeSel){
+  electionTypeSel.value = String(activeElectionType || "");
+  electionTypeSel.addEventListener("change", scheduleElectionReload);
+}
+if (reloadElectionBtn){
+  reloadElectionBtn.addEventListener("click", () => {
+    const y = electionYearInp ? Number(electionYearInp.value) : activeElectionYear;
+    const t = electionTypeSel ? String(electionTypeSel.value || "") : activeElectionType;
+    reloadElectionData(y, t, false);
+  });
+}
+
 // Year selector (population + tooltips + deviation)
 const yearSel = document.getElementById("yearSel");
 if (yearSel){
@@ -2848,11 +3147,13 @@ document.getElementById("searchBox").addEventListener("keydown", (e) => {
   if (yearSel) yearSel.value = String(activeYear);
   if (fillModeSel) fillModeSel.value = String(fillMode);
 
-  // Optional province election JSONs
-  let provincesLoaded = 0;
+  // Optional province election JSONs (year/type)
+  syncElectionControlsUI();
   try{
-    provincesLoaded = await loadElectionAllProvincesLimited(6);
-  }catch(_e){}
+    provincesLoaded = await loadElectionAllProvincesLimited(6, activeElectionYear, activeElectionType);
+  }catch(_e){
+    provincesLoaded = 0;
+  }
 
   // GeoJSON
   try{
